@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "HYQAD & Q-ZTNA: Hybrid AI-Quantum Anomaly Detection for QKD and Zero-Trust Networks"
+abstract: >-
+  Calibrated uncertainty quantification and quantum-kernel methods for
+  quantum-key-distribution and zero-trust network anomaly detection. This
+  repository is the code-and-data supplement accompanying the associated
+  manuscripts.
+authors:
+  - family-names: Kapoor
+    given-names: Arnav
+    orcid: ""
+    affiliation: "Department of Computer Science and Engineering, Indian Institute of Science Education and Research (IISER) Bhopal"
+date-released: "2026-08-08"
+keywords:
+  - quantum key distribution
+  - anomaly detection
+  - uncertainty quantification
+  - quantum machine learning
+  - cybersecurity
+  - gaussian processes
+license: MIT
+repository-code: "https://github.com/<your-username>/ccri"
+preferred-citation:
+  - type: article
+    title: >-
+      Calibrated Uncertainty Quantification for QKD Anomaly Detection, with a
+      Scale-Limited Study of Amplitude-Encoding Kernels
+    authors:
+      - family-names: Kapoor
+        given-names: Arnav
+    year: 2026
+    journal: arXiv preprint
+  - type: article
+    title: >-
+      Amplitude-Encoding Kernel Methods for Zero-Trust Network Anomaly
+      Detection: A Cosine-Similarity Feature-Space Approach to Real-Time Threat
+      Intelligence
+    authors:
+      - family-names: Kapoor
+        given-names: Arnav
+    year: 2026
+    journal: arXiv preprint
