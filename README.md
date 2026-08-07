@@ -117,7 +117,7 @@ python -m pytest
   author  = {Kapoor, Arnav},
   journal = {arXiv preprint},
   year    = {2026},
-  note    = {Code and data: https://github.com/<your-username>/ccri}
+  note    = {Code and data: https://github.com/arnavk23/ccri}
 }
 
 @article{kapoor_qztna,
@@ -126,7 +126,7 @@ python -m pytest
   author  = {Kapoor, Arnav},
   journal = {arXiv preprint},
   year    = {2026},
-  note    = {Code and data: https://github.com/<your-username>/ccri}
+  note    = {Code and data: https://github.com/arnavk23/ccri}
 }
 ```
 
