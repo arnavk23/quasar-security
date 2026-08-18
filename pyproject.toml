@@ -3,9 +3,9 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hyqad"
-version = "0.1.0"
-description = "Hybrid AI-Quantum Anomaly Detection for QKD systems: calibrated uncertainty quantification for physical-layer quantum key distribution attacks."
+name = "quasar-security"
+version = "0.2.0"
+description = "QUASAR: QUantum-inspired Anomaly detection with Statistically-Audited Robustness. Matched-scale evaluation of amplitude-encoding/quantum-inspired kernels and calibrated uncertainty quantification for security anomaly detection, spanning QKD physical-layer telemetry (HYQAD) and zero-trust network flows (Q-ZTNA)."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
@@ -14,9 +14,11 @@ authors = [
 ]
 keywords = [
     "quantum key distribution",
+    "zero-trust network architecture",
     "anomaly detection",
     "uncertainty quantification",
     "quantum machine learning",
+    "kernel methods",
     "cybersecurity",
     "gaussian processes",
 ]
@@ -33,6 +35,7 @@ dependencies = [
     "scipy>=1.10",
     "pandas>=2.0",
     "scikit-learn>=1.3",
+    "xgboost>=2.0",
     "torch>=2.0",
     "pennylane>=0.35",
     "matplotlib>=3.7",
@@ -47,7 +50,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["hyqad*"]
+include = ["hyqad*", "qztna*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

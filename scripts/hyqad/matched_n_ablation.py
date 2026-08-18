@@ -20,7 +20,9 @@ from hyqad.evaluation import Evaluator
 N_SEEDS_RF_GP = 10
 N_SEEDS_QK = 3
 N_SAMPLES = 1000
-OUT = "/home/arnav/Downloads/ccri/matched_n_results.csv"
+from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
+OUT = str(ROOT / "data" / "hyqad" / "matched_n_results.csv")
 
 GP_RF_SIZES = [25, 50, 100, 150, 200, 300, 500, 700]
 

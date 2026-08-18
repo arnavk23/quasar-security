@@ -17,7 +17,9 @@ from sklearn.preprocessing import StandardScaler
 
 N_SEEDS = 10
 N_SAMPLES = 1000
-OUT = "/home/arnav/Downloads/ccri/adversarial_robustness_results.csv"
+from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
+OUT = str(ROOT / "data" / "hyqad" / "adversarial_robustness_results.csv")
 
 PERTURB_BUDGETS = [0.0, 0.02, 0.05, 0.10, 0.15, 0.20, 0.30, 0.50]
 

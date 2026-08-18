@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Ablation: GP-only, QK-only, Hybrid + baselines, multi-seed."""
 import sys, numpy as np, pandas as pd, warnings, time
+from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
 warnings.filterwarnings("ignore")
 from hyqad.simulation import QKDDataGenerator
 from hyqad.models import BayesianAnomalyEstimator, QuantumKernelEstimator, HybridAnomalyDetector
@@ -81,5 +83,5 @@ for m in ["RF","GP-only","QK-only","Hybrid"]:
                   ["acc","f1","auc","ap","mcc","bal_acc","spec"]) +
           "%-12s" % ("%.4f±%.4f" % (r["lat"].mean(), r["lat"].std())))
 
-df.to_csv("/home/arnav/Downloads/ccri/ablation_results.csv", index=False)
+df.to_csv(str(ROOT / "data" / "hyqad" / "ablation_results.csv"), index=False)
 print("\nSaved to ablation_results.csv")

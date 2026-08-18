@@ -18,12 +18,9 @@ It also recomputes the "accuracy at u<0.3" selective-prediction claim honestly
 across seeds instead of trusting a single hardcoded annotation.
 """
 
-import sys
 import numpy as np
 import pandas as pd
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -34,7 +31,8 @@ from hyqad.simulation import QKDDataGenerator
 from hyqad.models import BayesianAnomalyEstimator, QuantumKernelEstimator
 from hyqad.features import CovarianceFeatureExtractor, AmplitudeEncoder
 
-DATA = Path("data")
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "hyqad"
 N_SAMPLES = 1000
 GP_SUBSET = 700
 N_QK = 25

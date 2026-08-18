@@ -18,6 +18,10 @@ from hyqad.models import HybridAnomalyDetector, BayesianAnomalyEstimator, JSOOpt
 from hyqad.pipeline import InferencePipeline
 from hyqad.evaluation import Evaluator, BenchmarkSuite
 from hyqad.config import Config
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+FIGS = ROOT / "figures" / "hyqad"
 
 sns.set_theme(style="whitegrid")
 
@@ -150,8 +154,8 @@ def main():
     cbar.set_label("Attack")
 
     plt.tight_layout()
-    plt.savefig("hyqad_results.png", dpi=150, bbox_inches="tight")
-    print("  Saved: hyqad_results.png")
+    plt.savefig(str(FIGS / "hyqad_results.png"), dpi=150, bbox_inches="tight")
+    print(f"  Saved: {FIGS / 'hyqad_results.png'}")
 
     best_f1 = results_df.iloc[0]
     print(f"\n{'=' * 72}")

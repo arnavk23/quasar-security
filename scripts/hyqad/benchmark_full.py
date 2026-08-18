@@ -22,7 +22,9 @@ N_SEEDS = 5
 N_SAMPLES = 1000
 N_QK = 25
 GP_SUBSET = 700
-OUT = "/home/arnav/Downloads/ccri/benchmark_full.csv"
+from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
+OUT = str(ROOT / "data" / "hyqad" / "benchmark_full.csv")
 
 def build_28dim(X_tr_raw, X_te_raw):
     scaler = StandardScaler()

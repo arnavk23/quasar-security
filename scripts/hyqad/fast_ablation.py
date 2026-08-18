@@ -12,7 +12,9 @@ N_SEEDS = 3
 N_SAMPLES = 500
 ATTACK_RATIO = 0.3
 N_TRAIN_QK = 25
-OUT = "/home/arnav/Downloads/ccri/ablation_results.csv"
+from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
+OUT = str(ROOT / "data" / "hyqad" / "ablation_results.csv")
 results = []
 
 for seed in range(N_SEEDS):

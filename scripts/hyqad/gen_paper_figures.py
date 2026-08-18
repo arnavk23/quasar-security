@@ -12,6 +12,10 @@ from sklearn.metrics import roc_curve, auc, confusion_matrix, ConfusionMatrixDis
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from hyqad.simulation import QKDDataGenerator
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "hyqad"
 
 sns.set_theme(style="whitegrid", font_scale=1.15, palette="muted")
 plt.rcParams.update({
@@ -19,7 +23,7 @@ plt.rcParams.update({
     "font.family": "serif", "font.serif": ["DejaVu Serif"],
     "axes.linewidth": 1.2, "xtick.major.width": 1.2, "ytick.major.width": 1.2,
 })
-FIGS = "/home/arnav/Downloads/ccri/figures"
+FIGS = str(ROOT / "figures" / "hyqad")
 rng = np.random.default_rng(42)
 gen = QKDDataGenerator()
 
@@ -479,7 +483,7 @@ def fig11_importance():
 # FIGURE 12: GP Accuracy-vs-Training-Size Learning Curve
 # ================================================================
 def fig12_gp_scaling():
-    df = pd.read_csv("/home/arnav/Downloads/ccri/gp_scaling.csv")
+    df = pd.read_csv(str(DATA / "gp_scaling.csv"))
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
     sizes = sorted(df.n_train.unique())
 
@@ -525,7 +529,7 @@ def fig12_gp_scaling():
 # ================================================================
 def fig13_matched_n_curves():
     import pandas as pd
-    csv_path = "/home/arnav/Downloads/ccri/matched_n_results.csv"
+    csv_path = str(DATA / "matched_n_results.csv")
     if not os.path.exists(csv_path):
         print("  SKIPPED fig13: matched_n_results.csv not found. Run matched_n_ablation.py first.")
         return
@@ -599,8 +603,8 @@ def fig13_matched_n_curves():
 # ================================================================
 def fig14_sensitivity_heatmap():
     import pandas as pd
-    csv_path = "/home/arnav/Downloads/ccri/sensitivity_results.csv"
-    csv_full_n = "/home/arnav/Downloads/ccri/sensitivity_full_n_results.csv"
+    csv_path = str(DATA / "sensitivity_results.csv")
+    csv_full_n = str(DATA / "sensitivity_full_n_results.csv")
     if not os.path.exists(csv_path):
         print("  SKIPPED fig14: sensitivity_results.csv not found.")
         return
@@ -646,7 +650,7 @@ def fig14_sensitivity_heatmap():
 # ================================================================
 def fig15_adversarial_robustness():
     import pandas as pd
-    csv_path = "/home/arnav/Downloads/ccri/adversarial_robustness_results.csv"
+    csv_path = str(DATA / "adversarial_robustness_results.csv")
     if not os.path.exists(csv_path):
         print("  SKIPPED fig15: adversarial_robustness_results.csv not found. Run adversarial_robustness.py first.")
         return
@@ -703,7 +707,7 @@ def fig15_adversarial_robustness():
 # ================================================================
 def fig16_qk_crossover():
     import pandas as pd
-    csv_path = "/home/arnav/Downloads/ccri/qk_crossover_results.csv"
+    csv_path = str(DATA / "qk_crossover_results.csv")
     if not os.path.exists(csv_path):
         print("  SKIPPED fig16: qk_crossover_results.csv not found. Run qk_crossover.py first.")
         return
@@ -753,8 +757,8 @@ def fig16_qk_crossover():
 # ================================================================
 def fig17_sensitivity_full_n():
     import pandas as pd
-    csv_n25 = "/home/arnav/Downloads/ccri/sensitivity_results.csv"
-    csv_n700 = "/home/arnav/Downloads/ccri/sensitivity_full_n_results.csv"
+    csv_n25 = str(DATA / "sensitivity_results.csv")
+    csv_n700 = str(DATA / "sensitivity_full_n_results.csv")
     if not os.path.exists(csv_n25) or not os.path.exists(csv_n700):
         print("  SKIPPED fig17: sensitivity CSVs not found.")
         return

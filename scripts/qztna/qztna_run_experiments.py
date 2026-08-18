@@ -1,19 +1,16 @@
 """
-Real experiment driver for the Q-ZTNA paper (papers/qcyber.tex).
+Real experiment driver for the Q-ZTNA paper (papers/qztna/qcyber.tex).
 
 Replaces the previous hardcoded-array figure script with genuine trained
 models on genuinely simulated network flow data. Every CSV written here is
-read directly by scripts/qztna_gen_figures.py to produce the paper figures,
-and the same numbers are what papers/qcyber.tex reports.
+read directly by scripts/qztna/qztna_gen_figures.py to produce the paper
+figures, and the same numbers are what papers/qztna/qcyber.tex reports.
 """
 
-import sys
 import time
 import numpy as np
 import pandas as pd
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -31,8 +28,9 @@ from qztna.models.kernel_svm import fit_kernel_svm, NystromKernelSVM, KERNEL_FUN
 from qztna.features.amplitude_kernel import kernel_target_alignment
 from qztna.certification.randomized_smoothing import certify_dataset
 
-DATA = Path("data")
-DATA.mkdir(exist_ok=True)
+ROOT = Path(__file__).resolve().parents[2]
+DATA = ROOT / "data" / "qztna"
+DATA.mkdir(exist_ok=True, parents=True)
 ATTACK_TYPES = ["port_scan", "ddos", "exfiltration", "dns_tunneling", "arp_spoofing"]
 N_SEEDS_MAIN = 10
 N_SEEDS_SMALL = 5

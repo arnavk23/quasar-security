@@ -1,7 +1,8 @@
 """
 Regenerates every data-driven Q-ZTNA figure from the real CSVs produced by
-scripts/qztna_run_experiments.py (see data/qztna_*.csv). This replaces the
-hardcoded-array figures previously produced by scripts/gen_figures.py.
+scripts/qztna/qztna_run_experiments.py (see data/qztna/qztna_*.csv). This
+replaces the hardcoded-array figures previously produced by the now-deleted
+scripts/gen_figures.py.
 
 fig1_framework (architecture diagram) is illustrative, not data-driven, and is
 kept as-is from the original script.
@@ -16,8 +17,6 @@ from matplotlib.patches import FancyBboxPatch
 from pathlib import Path
 from sklearn.manifold import TSNE
 
-import sys
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from qztna.simulation import NetworkFlowGenerator
 
 plt.rcParams.update({
@@ -26,9 +25,10 @@ plt.rcParams.update({
     'ytick.labelsize': 10, 'figure.dpi': 150,
 })
 
-FIGS = Path('figures')
-FIGS.mkdir(exist_ok=True)
-DATA = Path('data')
+ROOT = Path(__file__).resolve().parents[2]
+FIGS = ROOT / 'figures' / 'qztna'
+FIGS.mkdir(exist_ok=True, parents=True)
+DATA = ROOT / 'data' / 'qztna'
 
 colors = {
     'ae': '#1f77b4', 'AE-SVM': '#1f77b4',

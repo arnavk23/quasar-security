@@ -1,6 +1,6 @@
 """Regenerates fig_ece_reliability.png from the honest, uncorrupted calibration
-comparison in data/calibration_comparison.csv and
-data/calibration_reliability_seed0.csv (see scripts/calibration_comparison.py)."""
+comparison in data/hyqad/calibration_comparison.csv and
+data/hyqad/calibration_reliability_seed0.csv (see scripts/hyqad/calibration_comparison.py)."""
 
 import numpy as np
 import pandas as pd
@@ -9,8 +9,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-FIGS = Path('figures')
-DATA = Path('data')
+ROOT = Path(__file__).resolve().parents[2]
+FIGS = ROOT / 'figures' / 'hyqad'
+DATA = ROOT / 'data' / 'hyqad'
 
 plt.rcParams.update({
     'font.family': 'serif', 'font.size': 11, 'axes.labelsize': 12,

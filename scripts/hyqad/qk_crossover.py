@@ -15,7 +15,9 @@ from hyqad.models import QuantumKernelEstimator
 from hyqad.evaluation import Evaluator
 
 N_SEEDS = 3
-OUT = "/home/arnav/Downloads/ccri/qk_crossover_results.csv"
+from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
+OUT = str(ROOT / "data" / "hyqad" / "qk_crossover_results.csv")
 
 def make_classically_hard_data(n_samples=150, n_features=8, rng=None):
     if rng is None:

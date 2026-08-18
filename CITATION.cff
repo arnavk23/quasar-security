@@ -1,43 +1,45 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
-title: "HYQAD & Q-ZTNA: Hybrid AI-Quantum Anomaly Detection for QKD and Zero-Trust Networks"
+message: "If you use this software or these results, please cite the papers below."
+title: "QUASAR: QUantum-inspired Anomaly detection with Statistically-Audited Robustness"
 abstract: >-
-  Calibrated uncertainty quantification and quantum-kernel methods for
-  quantum-key-distribution and zero-trust network anomaly detection. This
-  repository is the code-and-data supplement accompanying the associated
-  manuscripts.
+  A matched-scale, matched-dimensionality evaluation of amplitude-encoding
+  (quantum-inspired) kernels and calibrated uncertainty quantification for
+  security anomaly detection, spanning two case studies: HYQAD (QKD
+  physical-layer telemetry) and Q-ZTNA (zero-trust network flows).
 authors:
   - family-names: Kapoor
     given-names: Arnav
-    orcid: ""
-    affiliation: "Department of Computer Science and Engineering, Indian Institute of Science Education and Research (IISER) Bhopal"
-date-released: "2026-08-08"
+    orcid: "https://orcid.org/0009-0007-9818-7908"
+    affiliation: "Indian Institute of Science Education and Research (IISER) Bhopal"
+date-released: "2026-08-18"
+version: "0.2.0"
 keywords:
   - quantum key distribution
+  - zero-trust network architecture
   - anomaly detection
   - uncertainty quantification
   - quantum machine learning
+  - kernel methods
   - cybersecurity
   - gaussian processes
 license: MIT
-repository-code: "https://github.com/arnavk23/ccri"
+repository-code: "https://github.com/arnavk23/quasar-security"
 preferred-citation:
   - type: article
-    title: >-
-      Calibrated Uncertainty Quantification for QKD Anomaly Detection, with a
-      Scale-Limited Study of Amplitude-Encoding Kernels
+    title: "Calibrated Uncertainty Quantification for QKD Anomaly Detection"
     authors:
       - family-names: Kapoor
         given-names: Arnav
+        orcid: "https://orcid.org/0009-0007-9818-7908"
     year: 2026
-    journal: arXiv preprint
+    status: unpublished
+    notes: "Manuscript; code and data at the repository above."
   - type: article
-    title: >-
-      Amplitude-Encoding Kernel Methods for Zero-Trust Network Anomaly
-      Detection: A Cosine-Similarity Feature-Space Approach to Real-Time Threat
-      Intelligence
+    title: "Amplitude-Encoding Kernels for Zero-Trust Network Anomaly Detection"
     authors:
       - family-names: Kapoor
         given-names: Arnav
+        orcid: "https://orcid.org/0009-0007-9818-7908"
     year: 2026
-    journal: arXiv preprint
+    status: unpublished
+    notes: "Manuscript; code and data at the repository above."

@@ -20,7 +20,9 @@ from hyqad.evaluation import Evaluator
 
 N_SEEDS = 5
 N_SAMPLES = 1000
-OUT = "/home/arnav/Downloads/ccri/sensitivity_full_n_results.csv"
+from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
+OUT = str(ROOT / "data" / "hyqad" / "sensitivity_full_n_results.csv")
 
 ATTACK_STRENGTHS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.5]
 ATTACK_TYPES = ["pns", "detector_blinding", "trojan_horse", "intercept_resend"]
