@@ -799,108 +799,17 @@ def fig17_sensitivity_full_n():
 # FIGURE 18: ECE Reliability Diagram (NEW)
 # ================================================================
 def fig18_ece_reliability():
-    """Reliability diagram showing calibration curves + ECE comparison."""
-    import sys
-    sys.path.insert(0, "/home/arnav/Downloads/ccri")
-    from hyqad.models import BayesianAnomalyEstimator
-    from hyqad.simulation import QKDDataGenerator
-    from sklearn.svm import SVC
-
-    gen_local = QKDDataGenerator()
-    df = gen_local.generate(n_samples=2000, attack_ratio=0.3)
-    cols = [c for c in df.columns if c not in ("label", "is_attack")]
-    X, y = df[cols].values, df["label"].values
-    from sklearn.model_selection import train_test_split
-    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, random_state=42)
-    X_tr_fit, y_tr_fit = X_tr[:400], y_tr[:400]
-
-    bae = BayesianAnomalyEstimator(random_state=42)
-    bae.fit(X_tr_fit, y_tr_fit)
-    _, proba_gp, uncert = bae.predict_with_uncertainty(X_te)
-
-    from hyqad.features import AmplitudeEncoder
-    amp = AmplitudeEncoder(encoding_dim=8)
-    X_tr_enc = amp.transform(X_tr_fit[:25])
-    X_te_enc = amp.transform(X_te)
-    qk_svm = SVC(kernel="precomputed", C=1.0, probability=True, random_state=42)
-    K_tr = X_tr_enc @ X_tr_enc.T
-    qk_svm.fit(K_tr, y_tr_fit[:25])
-    K_te = X_te_enc @ X_tr_enc.T
-    proba_qk = qk_svm.predict_proba(K_te)[:, 1]
-    proba_qk = np.clip(proba_qk, 0.3, 0.7) + rng.uniform(-0.05, 0.05, len(proba_qk))
-    proba_qk = np.clip(proba_qk, 0, 1)
-
-    def compute_ece(probs, labels, n_bins=10):
-        bins = np.linspace(0, 1, n_bins + 1)
-        bin_centers = (bins[:-1] + bins[1:]) / 2
-        accs = np.zeros(n_bins)
-        confs = np.zeros(n_bins)
-        counts = np.zeros(n_bins)
-        for i in range(n_bins):
-            idx = (probs >= bins[i]) & (probs < bins[i + 1])
-            counts[i] = idx.sum()
-            if counts[i] > 0:
-                accs[i] = labels[idx].mean()
-                confs[i] = probs[idx].mean()
-        ece = (counts / len(probs) * np.abs(accs - confs)).sum()
-        return ece, accs, confs, counts, bin_centers
-
-    ece_gp, acc_gp, conf_gp, cnt_gp, bins_gp = compute_ece(proba_gp, y_te)
-    ece_qk, acc_qk, conf_qk, cnt_qk, bins_qk = compute_ece(proba_qk, y_te)
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
-
-    # Reliability diagram
-    ax1.plot([0, 1], [0, 1], "k--", lw=1.5, alpha=0.4, label="Perfect calibration")
-    mask_gp = cnt_gp > 0
-    ax1.plot(conf_gp[mask_gp], acc_gp[mask_gp], "o-", color="#1565C0", lw=2.5,
-             markersize=8, label=f"Bayesian GP (ECE = {ece_gp:.3f})")
-    mask_qk = cnt_qk > 0
-    ax1.plot(conf_qk[mask_qk], acc_qk[mask_qk], "s--", color="#C62828", lw=2.5,
-             markersize=8, label=f"QK-SVM (ECE = {ece_qk:.3f})")
-    ax1.set_xlabel("Predicted Probability", fontsize=12)
-    ax1.set_ylabel("Observed Accuracy", fontsize=12)
-    ax1.set_title("Reliability Diagram", fontsize=13, fontweight="bold")
-    ax1.legend(fontsize=10, loc="lower right")
-    ax1.set_xlim(-0.02, 1.02)
-    ax1.set_ylim(-0.02, 1.02)
-    ax1.grid(True, alpha=0.2)
-
-    # Coverage-accuracy curve
-    thresholds = np.linspace(0, 0.5, 50)
-    cov_accs = []
-    cov_vals = []
-    for t in thresholds:
-        mask = uncert < t
-        if mask.sum() > 0:
-            cov_vals.append(mask.mean())
-            cov_accs.append(y_te[mask].mean())
-        else:
-            cov_vals.append(0)
-            cov_accs.append(0)
-    ax2.plot(cov_vals, cov_accs, color="#1565C0", lw=2.5)
-    ax2.axhline(y=0.994, color="gray", ls="--", lw=1.2, alpha=0.5,
-                label="Full-set accuracy (0.994)")
-    ax2.axvline(x=0.897, color="#2E7D32", ls=":", lw=1.5, alpha=0.7,
-                label="Coverage at $u<0.3$ (89.7%)")
-    ax2.plot(0.897, 1.0, "D", color="#2E7D32", ms=10)
-    ax2.annotate("$u<0.3$\n acc=1.000\n cov=89.7%",
-                 xy=(0.897, 1.0), xytext=(0.6, 0.875),
-                 fontsize=9, color="#2E7D32", fontweight="bold",
-                 arrowprops=dict(arrowstyle="->", color="#2E7D32", lw=1.5))
-    ax2.set_xlabel("Coverage (fraction retained)", fontsize=12)
-    ax2.set_ylabel("Accuracy on Retained Set", fontsize=12)
-    ax2.set_title("Selective Prediction: Accuracy vs Coverage", fontsize=13, fontweight="bold")
-    ax2.legend(fontsize=9, loc="lower left")
-    ax2.set_ylim(0.65, 1.02)
-    ax2.grid(True, alpha=0.2)
-
-    fig.suptitle("Calibration Analysis: GP Reliability and Selective Prediction",
-                 fontsize=14, fontweight="bold", y=1.02)
-    fig.tight_layout()
-    fig.savefig(f"{FIGS}/fig_ece_reliability.png", dpi=250, bbox_inches="tight")
-    plt.close(fig)
-    print(f"  Done: fig_ece_reliability.png  (GP ECE={ece_gp:.3f}, QK ECE={ece_qk:.3f})")
+    """Deprecated: this function previously corrupted the quantum kernel's
+    predicted probabilities (np.clip to [0.3, 0.7] plus injected noise) before
+    scoring its calibration, which manufactured its reported ECE rather than
+    measuring it, and hardcoded the "coverage at u<0.3 = 89.7%" annotation
+    instead of reading it off the actual computed curve. The honest,
+    multi-seed, matched-training-budget replacement (including a fair
+    Random-Forest calibration baseline) lives in
+    scripts/calibration_comparison.py + scripts/gen_calibration_figure.py --
+    run those two scripts instead of this function."""
+    print("  Skipped: fig_ece_reliability.png is now generated by "
+          "scripts/calibration_comparison.py + scripts/gen_calibration_figure.py")
 
 
 import os
