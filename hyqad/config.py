@@ -25,7 +25,7 @@ class AttackConfig:
 
 @dataclass
 class FeatureConfig:
-    encoding_dim: int = 8
+    encoding_dim: int | None = None
     covariance_smoothing: float = 1e-6
     use_amplitude_encoding: bool = True
     use_covariance_features: bool = True
@@ -35,7 +35,7 @@ class FeatureConfig:
 class ModelConfig:
     bayesian_prior_strength: float = 1.0
     quantum_kernel_type: Literal["gaussian", "angle", "amplitude"] = "amplitude"
-    n_quantum_qubits: int = 3
+    n_quantum_qubits: int | None = None
     quantum_kernel_gamma: float = 1.0
     lr: float = 0.01
     max_iter: int = 500

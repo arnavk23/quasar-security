@@ -2,29 +2,32 @@
 
 **QUantum-inspired Anomaly detection with Statistically-Audited Robustness**
 
-**HYQAD** (QKD physical-layer telemetry) and **Q-ZTNA** (zero-trust network flows). Both studies use a matched-scale, matched-dimensionality protocol. All compared models are trained at identical sample sizes and feature dimensionalities, across multiple seeds with confidence intervals.
+A matched-scale evaluation of the amplitude-encoding (quantum fidelity) kernel for security anomaly detection, in two domains:
+
+- **HYQAD** — QKD physical-layer telemetry from a seeded decoy-state BB84 simulator with operating drift and an attack-strength axis *s*.
+- **Q-ZTNA** — zero-trust network flows: a controlled copula-based flow simulator plus the public **UNSW-NB15** and **CIC-IDS2017** benchmarks.
+
+Every compared model is trained on the same subsample at every training size, over multiple seeds with 95% confidence intervals.
 
 ## Results summary
 
-| Study | Metric | Result |
-|---|---|---|
-| HYQAD | Deployed Bayesian GP accuracy | 0.994 ± 0.002, sub-10 ms latency |
-| HYQAD | Quantum kernel SVM vs. classical, matched-*n* | No benefit at any tested scale (*n* ≤ 25, *O(n²)* circuit cost) |
-| HYQAD | Calibration, matched budget (*n*=700) | Uncalibrated RF (ECE 0.007) outperforms deployed GP (ECE 0.130) |
-| Q-ZTNA | Amplitude-encoding kernel SVM vs. RBF-SVM | Statistically indistinguishable (0.947 vs. 0.948 acc., *p*=0.54) |
-| Q-ZTNA | Zero-day (leave-one-attack-out) generalization | AE-SVM AUC as low as 0.45 vs. 0.81–0.89 for RBF-SVM |
-| Q-ZTNA | Inference latency | AE-SVM ≈1.2× faster than RBF-SVM (Nyström) |
-
-Across both domains, we find no robust accuracy advantage for the
-amplitude-encoding/cosine-similarity kernel over classical kernels; this null
-result is reported as a primary finding, not omitted.
+| Setting | Finding |
+|---|---|
+| Kernel | The amplitude-encoding fidelity kernel equals squared cosine similarity and is computed exactly (verified against a PennyLane circuit to 7×10⁻¹⁵; ≈8×10⁴× faster). There is no small-*n* limit. |
+| QKD telemetry, *s* = 0.3 | Supervised models within 0.80–0.84 MCC; RF best or tied-best. AE-SVM ≈ RBF-SVM (McNemar *p* > 0.05 on 10/10 seeds). The GP is the least calibrated model (ECE 0.047 vs 0.030 for isotonic RF). |
+| Synthetic flows | AE-SVM ≈ RBF-SVM in accuracy (0.947 vs 0.948, *p* = 0.54); the norm-anchored AE-SVM reaches 0.960 / AUC 0.983. |
+| UNSW-NB15 / CIC-IDS2017 | AE-SVM ≈ RBF-SVM (UNSW 0.862 vs 0.863; CIC 0.993 vs 0.994); XGBoost, RF and the DNN lead. |
+| Zero-day (leave one attack type out) | Domain-dependent. In both controlled settings plain AE-SVM fails because its kernel discards input norm: synthetic flows 0.53 vs 0.84 AUC for RBF; QKD without its Mahalanobis feature 0.55 vs 0.94. A norm anchor, φ(x) = (x, c)/‖(x, c)‖, restores 0.79 and 0.94. On the public benchmarks it does not fail. Public data: UNSW-NB15 0.95 vs 0.93 (anchored 0.94); CIC-IDS2017 0.71 vs 0.66 (anchored 0.73). |
 
 ## Papers
 
-1. **Calibrated Uncertainty Quantification for QKD Anomaly Detection** (*HYQAD*)
-2. **Amplitude-Encoding Kernels for Zero-Trust Network Anomaly Detection** (*Q-ZTNA*)
+| Paper | Source | Notes |
+|---|---|---|
+| *When Do Amplitude-Encoding Quantum Kernels Help Security Anomaly Detection?* (merged journal version) | [`papers/combined/quasar.tex`](papers/combined/quasar.tex) | Both domains, public datasets, mechanism and fix |
+| *Calibrated and Kernel-Based Detection of QKD Implementation Attacks: A Controlled Simulation Study* | [`papers/hyqad/paper.tex`](papers/hyqad/paper.tex) | Conference version |
+| *Amplitude-Encoding Kernels for Zero-Trust Network Anomaly Detection* | [`papers/qztna/qcyber.tex`](papers/qztna/qcyber.tex) | Conference version |
 
-Progress slides: [papers/hyqad/presentation.pdf](papers/hyqad/presentation.pdf).`
+All three cite [`papers/references.bib`](papers/references.bib); every entry was checked, see [`papers/REFERENCE_AUDIT.md`](papers/REFERENCE_AUDIT.md).
 
 ## Installation
 
@@ -32,70 +35,39 @@ Progress slides: [papers/hyqad/presentation.pdf](papers/hyqad/presentation.pdf).
 python -m pip install -e ".[dev]"
 ```
 
-Requires Python ≥ 3.9. Core dependencies: `numpy`, `scipy`, `scikit-learn`, `xgboost`, `pandas`, `torch`, `pennylane`, `matplotlib`, `seaborn`.
-
-## Quick start
-
-```python
-# HYQAD
-from hyqad.config import Config
-from hyqad.simulation import QKDDataGenerator
-from hyqad.pipeline import InferencePipeline
-
-config = Config(n_samples=500, attack_ratio=0.3)
-train_df, val_df, test_df = QKDDataGenerator().generate_train_val_test(
-    n_samples=config.n_samples, attack_ratio=config.attack_ratio)
-cols = [c for c in train_df.columns if c != "label"]
-pipeline = InferencePipeline(config).fit(train_df[cols].values, train_df["label"].values)
-```
-
-```python
-# Q-ZTNA
-from qztna.simulation import NetworkFlowGenerator
-from qztna.models.kernel_svm import fit_kernel_svm
-
-df = NetworkFlowGenerator(seed=42).generate_dataset(n_samples=8000, attack_ratio=0.2, random_state=0)
-cols = [c for c in df.columns if c.startswith("f")]
-model, _ = fit_kernel_svm("ae", df[cols].values, df["label"].values, random_state=0)
-```
-
-A full HYQAD demo (data generation → training → evaluation → visualization): `python scripts/hyqad/demo.py`.
+Requires Python ≥ 3.9. Dependencies: `numpy`, `scipy`, `pandas`, `scikit-learn`, `xgboost`, `torch`, `pennylane`, `matplotlib`, `seaborn`, `joblib`.
 
 ## Reproducing the results
 
-All scripts are run from the repository root (e.g. `python scripts/hyqad/benchmark_full.py`) and resolve their own paths regardless of working directory.
+Run from the repository root with `PYTHONPATH=.`. Set `OMP_NUM_THREADS=1`; parallelism is across seeds.
 
 | Experiment | Script | Output |
 |---|---|---|
-| HYQAD full benchmark | `scripts/hyqad/benchmark_full.py` | `data/hyqad/benchmark_full.csv` |
-| HYQAD matched-*n* kernel ablation | `scripts/hyqad/matched_n_ablation.py` | `data/hyqad/matched_n_results.csv` |
-| HYQAD quantum-kernel crossover | `scripts/hyqad/qk_crossover.py` | `data/hyqad/qk_crossover_results.csv` |
-| HYQAD sensitivity analysis | `scripts/hyqad/sensitivity_full_n.py` | `data/hyqad/sensitivity_full_n_results.csv` |
-| HYQAD adversarial robustness | `scripts/hyqad/adversarial_robustness.py` | `data/hyqad/adversarial_robustness_results.csv` |
-| HYQAD GP scaling | `scripts/hyqad/ablation_scaled.py` | `data/hyqad/gp_scaling.csv` |
-| HYQAD calibration (GP vs. QK vs. RF) | `scripts/hyqad/calibration_comparison.py` | `data/hyqad/calibration_comparison.csv` |
-| HYQAD figures | `scripts/hyqad/gen_paper_figures.py`, `gen_calibration_figure.py` | `figures/hyqad/*.png` |
-| Q-ZTNA full experiment suite | `scripts/qztna/qztna_run_experiments.py` | `data/qztna/qztna_*.csv` |
-| Q-ZTNA figures | `scripts/qztna/qztna_gen_figures.py` | `figures/qztna/*.png` |
+| HYQAD (all experiments) | `scripts/hyqad/run_experiments.py [name ...]` | `data/hyqad/*.csv` |
+| HYQAD figures | `scripts/hyqad/gen_figures.py` | `figures/hyqad/*.png` |
+| Q-ZTNA synthetic flows | `scripts/qztna/qztna_run_experiments.py [name ...]` | `data/qztna/qztna_*.csv` |
+| Public datasets (download) | `scripts/fetch_datasets.sh` | `data/external/` (git-ignored) |
+| Q-ZTNA public datasets | `scripts/qztna/run_real_data.py [name ...]` | `data/qztna/real_*.csv` |
+| Q-ZTNA figures | `scripts/qztna/qztna_gen_figures.py`, `scripts/qztna/gen_real_figures.py` | `figures/qztna/*.png` |
+| Cross-domain figures | `scripts/combined_figures.py` | `figures/combined/*.png` |
+| Norm-vs-direction diagnostic | `scripts/norm_diagnostic.py` | `data/norm_diagnostic.csv` |
+| Fill paper numbers | `scripts/fill_papers.py` | `papers/*/…tex` from `*.template.tex` |
+| Paper tables | `scripts/make_tables.py` | LaTeX rows printed from the CSVs |
 
-Run tests with `python -m pytest`.
+`scripts/hyqad/demo.py` runs a short end-to-end HYQAD example. Run tests with `python -m pytest`.
+
+## Changes in 0.3.0
+
+Version 0.2.0 results are superseded. The fixes:
+
+- **HYQAD simulator.** Every seed produced the same dataset, because the channel and attack simulators always used seed 42. Block timestamps leaked the label. The error-rate feature alone separated attacks perfectly. The gain used `(1-ηT)^μ` instead of the Poisson `1-e^{-ηTμ}`. The simulator now has operating drift, finite-size noise and an attack-strength parameter.
+- **HYQAD features.** The old "28-dim" features were rolling averages of neighbouring rows of a shuffled table plus constant columns. The amplitude kernel saw only the first 8 of them. Features are now the 7 standardized measurements plus a Mahalanobis distance, and the kernel encodes all of them.
+- **HYQAD quantum kernel.** It no longer silently falls back to an RBF kernel when a circuit call fails, and it is evaluated exactly at every training size. The old benchmark trained it on 25 samples only.
+- **HYQAD baselines.** Outlier-score signs are fixed (OC-SVM AUC used to be reported as 0.000). IF and LOF are now fit on normal data, like OC-SVM.
+- **HYQAD reporting.** Latency now excludes training time. Two figures used hard-coded numbers; every figure now reads the CSVs. The McNemar test the paper reported is now actually computed.
+- **Q-ZTNA.** Added the public-dataset evaluation, deep baselines (DNN, autoencoder), the non-negative and norm-anchored kernel controls, and corrected text (Lipschitz bound, latency claims, a contradictory convergence section).
+- **References.** Thirteen entries did not exist as cited: ten could not be found at all, and three had the wrong title, authors or venue. They were removed or replaced (see the audit).
 
 ## Citing this work
 
-See [`CITATION.cff`](CITATION.cff), or:
-
-```bibtex
-@unpublished{kapoor2026hyqad,
-  title  = {Calibrated Uncertainty Quantification for QKD Anomaly Detection},
-  author = {Kapoor, Arnav},
-  year   = {2026},
-  note   = {Manuscript. Code and data: https://github.com/arnavk23/quasar-security}
-}
-
-@unpublished{kapoor2026qztna,
-  title  = {Amplitude-Encoding Kernels for Zero-Trust Network Anomaly Detection},
-  author = {Kapoor, Arnav},
-  year   = {2026},
-  note   = {Manuscript. Code and data: https://github.com/arnavk23/quasar-security}
-}
-```
+See [`CITATION.cff`](CITATION.cff).

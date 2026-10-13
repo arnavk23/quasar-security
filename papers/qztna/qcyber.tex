@@ -1,27 +1,14 @@
-\documentclass[twocolumn,a4paper,11pt]{article}
+\documentclass[conference,10pt]{IEEEtran}
 
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
-\usepackage{hyperref}
-\usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{enumitem}
-\usepackage[margin=1in]{geometry}
 \usepackage{cite}
-\usepackage{caption}
-\usepackage{subcaption}
+\usepackage{xcolor}
 \usepackage{placeins}
-\usepackage{amsmath}
-\usepackage[compact]{titlesec}
-\titlespacing*{\section}{0pt}{1.2ex}{0.5ex}
-\titlespacing*{\subsection}{0pt}{1ex}{0.4ex}
-\usepackage{ragged2e}
-\setlength{\abovedisplayskip}{4pt}
-\setlength{\belowdisplayskip}{4pt}
-\setlength{\abovedisplayshortskip}{2pt}
-\setlength{\belowdisplayshortskip}{2pt}
-\setlength{\parskip}{1pt plus 0.5pt minus 0.5pt}
+\usepackage{hyperref}
 
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
 
@@ -30,54 +17,39 @@
 \title{Amplitude-Encoding Kernels for Zero-Trust Network Anomaly Detection}
 
 \author{
-  Arnav Kapoor \\
-  \texttt{arnavkapoor23@iiserb.ac.in} \\
-  Department of Computer Science and Engineering \\
-  \textit{Indian Institute of Science Education and Research Bhopal} \\
-  Bhopal, Madhya Pradesh 462066, India
+  \IEEEauthorblockN{Arnav Kapoor}
+  \IEEEauthorblockA{Department of Computer Science and Engineering\\
+  \textit{Indian Institute of Science Education and Research Bhopal}\\
+  Bhopal, India\\
+  arnavkapoor23@iiserb.ac.in}
 }
 
 \begin{document}
 
-\raggedbottom
-
 \maketitle
 
 \begin{abstract}
-Zero-Trust Network Architectures (ZTNA) require continuous, real-time anomaly
-detection across high-dimensional network flow features---a setting where
-representation learning and inductive bias matter as much as raw classifier power.
-We present Q-ZTNA, an anomaly detection framework built around an
-amplitude-encoding (cosine-similarity) kernel---a classically computable feature map
-$\mathcal{K}_A(\mathbf{x}_i, \mathbf{x}_j) = |\langle\mathbf{x}_i, \mathbf{x}_j
-\rangle|^2 / \|\mathbf{x}_i\|^2 \|\mathbf{x}_j\|^2$---as the core of a kernel SVM
-with Nystr\"om approximation, and we report a rigorous, matched-scale evaluation of
-when this kernel actually helps. On synthetic enterprise-network telemetry spanning
-five attack classes (port scanning, DDoS, data exfiltration, DNS tunneling, and ARP
-spoofing), the amplitude-encoding SVM (AE-SVM) reaches $0.947 \pm 0.002$ detection
-accuracy with sub-millisecond mean inference latency ($0.0048$\,ms with Nystr\"om
-approximation) on CPU---statistically indistinguishable from an RBF-kernel SVM
-($0.948 \pm 0.003$, paired $t$-test $p = 0.54$) and outperformed by a plain
-multi-layer perceptron ($0.965 \pm 0.001$). A matched-$n$ ablation across
-$n \in \{50,\dots,5000\}$ and a feature-dimensionality sweep ($d \in
-\{16,\dots,256\}$) find no training-size or dimensionality regime in which the
-amplitude-encoding kernel reliably beats RBF; kernel-target alignment is
-consistently \emph{lower} for the amplitude-encoding kernel than for RBF across
-every attack type, giving a mechanistic explanation for the null result. The one
-place the two kernels diverge sharply is zero-day generalization: on four of five
-leave-one-attack-out scenarios, AE-SVM's held-out AUC falls to $0.45$--$0.61$
-(at or below chance on two), while RBF-SVM retains $0.81$--$0.89$ AUC---a specific,
-security-relevant failure mode of the cosine-similarity inductive bias that, to our
-knowledge, has not been reported previously. Randomized-smoothing certification
-gives comparable $\ell_2$ robustness radii for both kernels, with AE-SVM abstaining
-slightly more often. We report these results, including the negative ones, in the
-same spirit as our companion study of amplitude-encoding kernels on QKD telemetry
-(where the same kernel also failed to outperform classical baselines)~\cite{kapoor2026hyqad}:
-across two different physical-layer and network-layer security domains, we find no
-evidence that the amplitude-encoding/cosine-similarity feature map -- despite its
-appeal as a ``quantum-inspired'' inductive bias -- provides a reliable advantage
-over standard classical kernels, and it introduces a specific zero-day
-generalization weakness that practitioners should be aware of before adopting it.
+Zero-trust network architectures need continuous anomaly detection over
+high-dimensional flow features, and ``quantum-inspired'' kernels are
+increasingly proposed for the task. We test the most common one, the
+amplitude-encoding kernel $K_A(\mathbf{x},\mathbf{y})=(\hat{\mathbf{x}}^{\mathsf{T}}\hat{\mathbf{y}})^2$,
+which is exactly the fidelity kernel of amplitude-encoded quantum states and is
+classically computable. Every comparison trains all models on the same data, at
+matched training sizes ($n=50$--$5000$) and feature dimensionalities
+($d=16$--$256$), on a controlled flow simulator and on the public UNSW-NB15 and
+CIC-IDS2017 benchmarks. In distribution, the amplitude-encoding SVM (AE-SVM) is
+statistically indistinguishable from an RBF-kernel SVM (synthetic accuracy
+$0.947$ vs.\ $0.948$, $p=0.54$; UNSW-NB15 $0.862$ vs.\ $0.863$; CIC-IDS2017
+$0.993$ vs.\ $0.994$) and below tree ensembles and neural networks. On attack
+types withheld from training the result depends on the data. On synthetic flows
+AE-SVM fails (mean held-out AUC $0.526$ vs.\ $0.839$ for RBF-SVM); controls trace
+this to the kernel's invariance to input norm---removing only the sign
+ambiguity barely helps ($0.593$), while appending one constant ``norm-anchor''
+coordinate before encoding restores $0.793$ and raises in-distribution accuracy
+to $0.960$. On the public benchmarks AE-SVM does not fail: mean held-out AUC is
+$0.945$ vs.\ $0.932$ on UNSW-NB15 and $0.715$ vs.\ $0.658$ on CIC-IDS2017, so the simulator's failure is not a general property of real
+traffic. Certified $\ell_2$ radii under randomized smoothing are comparable for
+both kernels. Code, data preparation and every result file are released.
 \end{abstract}
 
 \section{Introduction}
@@ -85,20 +57,19 @@ generalization weakness that practitioners should be aware of before adopting it
 
 The proliferation of perimeter-less enterprise networks, accelerated by remote-work
 adoption and multi-cloud deployment, has rendered traditional castle-and-moat security
-models obsolete~\cite{rose2020zero,kindervag2010zero}. Zero-Trust Network
+models obsolete~\cite{rose2020zero,kindervag2010build}. Zero-Trust Network
 Architectures (ZTNA) address this by enforcing continuous authentication,
 authorization, and verification for every entity, device, and flow---regardless of
-network locality~\cite{nist800207,gilman2019zero}.
+network locality~\cite{rose2020zero,gilman2017zero}.
 
 At the operational core of ZTNA lies real-time anomaly detection: the ability to
 distinguish benign traffic from malicious activity at line rate, with high sensitivity
 and low false-positive rates. Classical approaches---from signature-based systems
 (Snort~\cite{roesch1999snort}, Suricata) to ML-based detectors using random forests,
-SVMs, and deep neural networks~\cite{sommer2010machine,
-mirsky2018kitsune}---achieve strong performance on benchmark datasets but face
+SVMs, and deep neural networks~\cite{sommer2010outside,mirsky2018kitsune}---achieve strong performance on benchmark datasets but face
 fundamental limitations: (i) feature spaces of $10^2$--$10^3$ dimensions require
 models whose inference cost scales poorly with dimensionality; (ii) adversarial
-robustness remains elusive without expensive adversarial training~\cite{goodfellow2014explaining};
+robustness remains elusive without expensive adversarial training~\cite{goodfellow2015explaining};
 and (iii) uncertainty quantification---critical for security operations where
 false negatives carry asymmetric cost---is often absent or poorly calibrated.
 
@@ -123,31 +94,21 @@ kernel choice is actually justified for this data. Our contributions are:
 
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
   \item \textbf{A matched-scale test of the cosine-similarity inductive-bias
-    hypothesis.} Across training sizes $n \in \{50,\dots,5000\}$ and feature
-    dimensionalities $d \in \{16,\dots,256\}$, we find no regime in which the
-    amplitude-encoding kernel SVM (AE-SVM) reliably outperforms an RBF-kernel SVM
-    trained on the same data ($0.947 \pm 0.002$ vs.\ $0.948 \pm 0.003$ accuracy,
-    $p=0.54$); kernel-target alignment is consistently lower for AE-SVM than RBF
-    across all five attack types, giving a mechanistic account of the null result.
+    hypothesis} across training sizes $n\in\{50,\dots,5000\}$ and
+    dimensionalities $d\in\{16,\dots,256\}$, on synthetic flows and on
+    UNSW-NB15 and CIC-IDS2017. AE-SVM is never reliably ahead of RBF-SVM.
 
-  \item \textbf{A previously unreported zero-day generalization weakness.} On
-    four of five leave-one-attack-out scenarios, AE-SVM's held-out AUC drops to
-    $0.45$--$0.61$ while RBF-SVM retains $0.81$--$0.89$---the cosine-similarity
-    encoding degrades markedly under genuine distribution shift even though it is
-    competitive in-distribution.
+  \item \textbf{A zero-day failure and its mechanism.} Leave-one-attack-out
+    tests show that AE-SVM fails on unseen attack types; controls attribute
+    this to norm invariance rather than sign ambiguity.
 
-  \item \textbf{Certified robustness and calibrated uncertainty.} We adapt
-    randomized-smoothing certification to amplitude-encoded inputs; both AE-SVM
-    and RBF-SVM achieve comparable certified $\ell_2$ radii, and Platt-scaled
-    AE-SVM probabilities support uncertainty-aware selective prediction.
+  \item \textbf{A one-line fix.} A norm-anchored encoding, with its constant set
+    from training data alone, recovers most of the zero-day gap and improves
+    in-distribution accuracy.
 
-  \item \textbf{A cross-domain honesty check.} Combined with our companion study
-    of the same kernel on QKD telemetry~\cite{kapoor2026hyqad}, this is (to our
-    knowledge) the first evaluation of the amplitude-encoding/cosine-similarity
-    kernel across two distinct security domains under matched-scale protocols in
-    both; in neither domain does it provide a reliable advantage over classical
-    kernels, which we report as a cautionary finding for the growing
-    ``quantum-inspired kernel'' literature in security applications.
+  \item \textbf{Robustness, calibration and cost.} Randomized-smoothing
+    certification, Platt-scaled selective prediction, deep-learning baselines
+    (DNN, Kitsune-style autoencoder) and inference latency for every model.
 \end{enumerate}
 
 \section{Related Work}
@@ -155,16 +116,16 @@ kernel choice is actually justified for this data. Our contributions are:
 
 \subsection{Zero-Trust Anomaly Detection}
 
-Zero-trust security monitoring has been approached through statistical
-methods~\cite{ashraf2020zero}, behavioral profiling~\cite{wang2021user}, and
-ML-based flow analysis, surveyed broadly by Buczak and Guven~\cite{buczak2016survey}.
+Zero-trust architectures and their monitoring components are surveyed by Syed
+et al.~\cite{syed2022zero}; behavioral profiling of users and
+entities~\cite{shashanka2016user} and ML-based flow analysis, surveyed broadly
+by Buczak and Guven~\cite{buczak2016survey}, supply the detection layer.
 Mirsky et al.~\cite{mirsky2018kitsune} proposed Kitsune, an
 ensemble of autoencoders for IoT network anomaly detection achieving
-F1-scores $> 0.90$ on benchmark datasets. More recently, deep learning approaches
-using graph neural networks~\cite{zhou2020graph} and transformers~\cite{wu2022transformer}
-have pushed detection accuracy further, though with inference latencies in the 1--10\,ms
-range that challenge line-rate deployment. Critically, none of these methods provide
-certified robustness guarantees or calibrated uncertainty for security operators.
+F1-scores $> 0.90$ on benchmark datasets. More recently, graph neural networks~\cite{zhou2020graph} and transformer-based
+sequence models~\cite{zerveas2021transformer} have been adapted to traffic data.
+These detectors are typically reported without certified robustness or
+calibration analysis, which security operators need when acting on alerts.
 
 \subsection{Kernel Methods and Feature Encoding}
 
@@ -176,16 +137,17 @@ $\mathcal{K}_A(\mathbf{x}_i, \mathbf{x}_j) = |\langle\phi(\mathbf{x}_i),
 \phi(\mathbf{x}_j)\rangle|^2 = \cos^2\theta_{ij}$, i.e., squared cosine similarity.
 This kernel is classically computable in $\mathcal{O}(d)$ per pair---unlike the
 entangling-circuit kernels studied
-by~\cite{havlicek2019supervised,liu2021quantum,huang2021power}, which can realize feature maps
+by~\cite{havlicek2019supervised,liu2021rigorous,huang2021power}, which can realize feature maps
 that are classically intractable. However, squared cosine similarity provides a
 distinct inductive bias: it depends only on the angle between vectors, making it
 insensitive to magnitude variations that may be uninformative or noisy in network
 traffic data.
 
-Recent work applying quantum-inspired kernels to cybersecurity includes do Vale
-et al.~\cite{vale2023quantum}, who evaluated quantum SVMs for intrusion detection,
-and Suryotrisongko and Musashi~\cite{suryotrisongko2022quantum}, who explored
-hybrid quantum-classical models for malware classification. Our work differs by
+Recent work applying quantum and quantum-inspired models to cybersecurity
+includes Kalinin and Krundyshev~\cite{kalinin2023security}, who evaluated quantum
+SVMs and quantum convolutional networks for intrusion detection, and
+Suryotrisongko and Musashi~\cite{suryotrisongko2022evaluating}, who evaluated
+hybrid quantum-classical deep learning for botnet DGA detection. Our work differs by
 focusing on the specific inductive bias of the amplitude-encoding kernel for ZTNA
 flow data, providing certified robustness guarantees, and performing rigorous
 scale-controlled benchmarking.
@@ -197,21 +159,22 @@ smooth classifier $g(\mathbf{x}) = \mathbb{E}_{\boldsymbol{\epsilon} \sim \mathc
 from a base classifier $f$~\cite{cohen2019certified}. The certified radius at
 input $\mathbf{x}$ is $R = \sigma \cdot \Phi^{-1}(p_A)$,
 where $p_A$ is a lower bound on $g(\mathbf{x})$'s probability of the top class.
-Webb et al.~\cite{webb2023quantum} showed that amplitude-encoding feature maps can naturally
-provide smoothing benefits due to their Lipschitz properties. We adapt and extend
-this analysis to the network intrusion domain.
+Adversarial vulnerability of quantum classifiers has been studied by Lu
+et al.~\cite{lu2020quantum}; whether the $L_2$ normalization inside amplitude
+encoding translates into larger certified radii for a classically computed
+kernel has, to our knowledge, not been tested, and we test it here.
 
 \section{Methodology}
 \label{sec:method}
 
-\begin{figure*}[t]
+\begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{fig1_framework_qztna.png}
   \caption{Q-ZTNA architecture: NetFlow/IPFIX telemetry ingestion, amplitude-encoding
   feature map, Nystr\"om-approximated kernel SVM, randomized-smoothing
   certification, and selective prediction with analyst deferral.}
   \label{fig:framework}
-\end{figure*}
+\end{figure}
 
 \subsection{Threat Model and Network Architecture}
 \label{sec:threat}
@@ -259,42 +222,25 @@ K_A(\mathbf{x}_i, \mathbf{x}_j) = \left(\hat{\mathbf{x}}_i^\mathsf{T} \hat{\math
 \label{eq:qkernel}
 \end{equation}
 
-This kernel is classically computable in $\mathcal{O}(n^2 d)$ operations via
-Eq.~\ref{eq:qkernel}; no quantum hardware is required for $d \leq 2^{20}$.
-(For $d > 2^{20}$, the amplitude encoding would require quantum state preparation,
-but this regime is not reached in our experiments.) The encoded feature space
-structure is visualized via t-SNE in Fig.~\ref{fig:featurespace}. Note that each
-attack type in our threat model (Section~\ref{sec:threat}) targets distinct
-protocol layers and feature subsets by construction---port scanning alters
-packet-header statistics, DDoS inflates volumetric features, data exfiltration
-modifies behavioral entropy, etc.---so clean clustering in any embedding is
-partly expected from the data-generating process rather than evidence of a
-uniquely powerful encoding, a caveat we echo from our prior study on QKD
-telemetry~\cite{kapoor2026hyqad}.
+This kernel is classically computable in $\mathcal{O}(d)$ operations per pair
+(Eq.~\ref{eq:qkernel}) for any $d$: although the same overlap is what a quantum
+device would estimate after preparing $|\hat{\mathbf{x}}\rangle$ on
+$\lceil\log_2 d\rceil$ qubits, no quantum hardware is needed to evaluate it.
 
-We augment the cosine-similarity kernel with a trainable diagonal weighting:
-
+Because $K_A(c\,\mathbf{x},\mathbf{y})=K_A(\mathbf{x},\mathbf{y})$ for every
+$c\neq0$, any classifier built on $K_A$ gives $\mathbf{x}$, $2\mathbf{x}$ and
+$-\mathbf{x}$ the same score: it cannot use an input's distance from the origin,
+which on standardized features is its distance from the training mean. We
+therefore also evaluate a \emph{norm-anchored} encoding that appends a constant
+coordinate before normalization,
 \begin{equation}
-K_A^{(\boldsymbol{\theta})}(\mathbf{x}_i, \mathbf{x}_j) =
-\left(\sum_{k=1}^{d} \theta_k \, \hat{x}_{ik} \hat{x}_{jk}\right)^2
-\label{eq:qkernel_trainable}
+\phi_c(\mathbf{x}) = \frac{(\mathbf{x},\,c)}{\sqrt{\|\mathbf{x}\|_2^2+c^2}},\qquad
+c=\operatorname{median}_{\mathbf{x}\in\mathcal{D}_{\text{train}}}\|\mathbf{x}\|_2,
+\label{eq:anchor}
 \end{equation}
-
-where $\boldsymbol{\theta} \in \mathbb{R}^{d}$ is a learnable parameter
-vector initialized to $\mathbf{1}$. This weighted cosine kernel is optimized via
-kernel alignment~\cite{cristianini2002kernel} on a held-out validation set.
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig14_feature_space.png}
-  \caption{t-SNE visualization of the unit-norm ($d=64$) amplitude-encoded
-  feature space. Each point is a network flow transformed via
-  Eq.~\ref{eq:amplitude_encoding}. Cluster separation here is a qualitative,
-  2-D projection and should be read alongside the quantitative confusion matrix
-  (Fig.~\ref{fig:confusion}), which shows meaningful attack/normal overlap that a
-  t-SNE plot alone would not reveal.}
-  \label{fig:featurespace}
-\end{figure*}
+whose last amplitude is a monotone function of $\|\mathbf{x}\|_2$. The
+median-norm rule fixes $c$ from training data alone; the encoding needs one
+extra amplitude.
 
 \subsection{Detection Model}
 
@@ -358,18 +304,20 @@ probability that $g(\mathbf{x})$ returns the majority class $c_A$.
 For amplitude-encoding feature maps, we additionally derive a bound on the output distortion
 under input perturbation. Let $\Delta(\boldsymbol{\epsilon}) = \|\phi(\mathbf{x})
 - \phi(\mathbf{x} + \boldsymbol{\epsilon})\|_2$ be the perturbation in the encoding
-space. The Lipschitz constant of the amplitude encoding is:
-
+space. The Jacobian of $\phi(\mathbf{x}) = \mathbf{x}/\|\mathbf{x}\|_2$ is
+$J_\phi(\mathbf{x}) = (I - \hat{\mathbf{x}}\hat{\mathbf{x}}^\mathsf{T})/\|\mathbf{x}\|_2$, so its
+spectral norm is exactly
 \begin{equation}
-L_\phi = \sup_{\mathbf{x} \in \mathbb{R}^d} \|J_\phi(\mathbf{x})\|_2 \leq
-\frac{\sqrt{2}}{\|\mathbf{x}\|_2}
+\|J_\phi(\mathbf{x})\|_2 = \frac{1}{\|\mathbf{x}\|_2}.
 \label{eq:lipschitz}
 \end{equation}
-
-where $J_\phi$ is the Jacobian of $\phi$. This implies that for input perturbation
-$\|\boldsymbol{\epsilon}\|_2 \leq r$, the encoding perturbation satisfies
-$\|\phi(\mathbf{x}) - \phi(\mathbf{x}+\boldsymbol{\epsilon})\|_2 \leq L_\phi r$,
-providing a direct link between input-space and feature-space certification.
+The map is therefore locally Lipschitz with a constant that depends on the
+input's norm and is unbounded as $\|\mathbf{x}\|_2 \to 0$: normalization
+contracts perturbations of large-norm inputs and amplifies those of small-norm
+inputs. For a perturbation $\|\boldsymbol{\epsilon}\|_2 \le r < \|\mathbf{x}\|_2$,
+$\|\phi(\mathbf{x}) - \phi(\mathbf{x}+\boldsymbol{\epsilon})\|_2 \le
+2r/\|\mathbf{x}\|_2$. On standardized flow features many benign flows lie near
+the origin, so this argument gives no uniform robustness guarantee.
 
 \subsection{Uncertainty Quantification}
 
@@ -418,7 +366,7 @@ Section~\ref{sec:results} reports. Perturbation strength (default $1.0\times$,
 swept in $\{0.05,\dots,1.0\}\times$ for the noise-sensitivity analysis) scales
 both the latent shift magnitude and its variance inflation.
 
-\begin{table*}[t]
+\begin{table}[t]
   \centering
   \caption{Attack-specific latent-space perturbations. Each attack shifts a fixed
   subset of feature-group dimensions (Section~\ref{sec:threat}) by
@@ -437,30 +385,15 @@ both the latent shift magnitude and its variance inflation.
     ARP Spoofing  & header, behavioral               & 6 \\
     \bottomrule
   \end{tabular}
-\end{table*}
+\end{table}
 
 The main detection benchmark (Table~\ref{tab:detection}) uses $N=8{,}000$ labeled
 samples per run (20\% attack, balanced across the five types), split 70/30 with
 stratification, over 10 random seeds; the matched-$n$, dimensionality, and
-zero-day experiments use independently generated pools (see
-Section~\ref{sec:experiments} for per-experiment sample sizes). We use $d=64$
+zero-day experiments use independently generated pools whose sizes are given
+with each experiment below. We use $d=64$
 features by default (16 header-based, 24 flow-based, 24 behavioral), varied in
 the dimensionality sweep.
-
-Fig.~\ref{fig:perturbation} visualizes the per-attack latent perturbation
-magnitudes across the feature space, showing that each attack type perturbs a
-distinct (but for DNS tunneling/exfiltration, partially overlapping) subset of
-feature-group dimensions.
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig12_perturbation.png}
-  \caption{Per-attack perturbation magnitudes across network traffic features.
-  Darker colors indicate stronger deviation from normal traffic. Each attack type
-  produces a distinct perturbation signature, enabling multi-class discrimination
-  in the amplitude-encoding feature space.}
-  \label{fig:perturbation}
-\end{figure*}
 
 \subsection{Baselines and Evaluation}
 
@@ -484,7 +417,7 @@ Nystr\"om wrapper with the corresponding scikit-learn pairwise-kernel function.
 The full pipeline (feature extraction, Nystr\"om projection, SVM decision, Platt
 calibration) runs in $0.0048$\,ms mean latency per sample on a single CPU core for
 $d=64$, $n=4{,}000$ training, $m=50$ landmarks (Section~\ref{sec:latency}). All
-experiments were conducted on a Windows laptop with an Intel processor.
+experiments run on a single CPU core per process (8-core Linux workstation).
 
 \section{Results}
 \label{sec:results}
@@ -494,28 +427,23 @@ experiments were conducted on a Windows laptop with an Intel processor.
 \begin{table*}[t]
   \centering
   \caption{Detection performance across attack types (mean $\pm$ 95\% CI,
-  10 seeds, $n_{\text{train}}=5{,}600$). AE-SVM and RBF-SVM/Laplacian-SVM/Poly-SVM
-  use the Nystr\"om approximation of Eq.~\ref{eq:nystrom}.}
+  10 seeds, $n_{\text{train}}=5{,}600$). All kernel SVMs use the Nystr\"om
+  approximation of Eq.~\ref{eq:nystrom}; AE-SVM (anchored) appends the norm-anchor
+  coordinate of Eq.~\ref{eq:anchor} before encoding.}
   \label{tab:detection}
   \footnotesize\setlength{\tabcolsep}{3.5pt}
   \begin{tabular}{lccccc}
     \toprule
     \textbf{Model} & \textbf{Accuracy} & \textbf{F1} & \textbf{AUC} & \textbf{Prec.} & \textbf{Recall} \\
     \midrule
-    AE-SVM (ours)  & $0.947 \pm 0.002$ & $0.855 \pm 0.007$ &
-      $0.966 \pm 0.003$ & $0.942 \pm 0.003$ & $0.784 \pm 0.009$ \\
-    RBF-SVM        & $0.948 \pm 0.003$ & $0.864 \pm 0.009$ & $0.976 \pm 0.003$ &
-      $0.908 \pm 0.004$ & $0.824 \pm 0.016$ \\
-    Laplacian-SVM  & $0.946 \pm 0.003$ & $0.857 \pm 0.009$ & $0.976 \pm 0.003$ &
-      $0.913 \pm 0.004$ & $0.808 \pm 0.016$ \\
-    Poly-SVM (d=3) & $0.959 \pm 0.003$ & $0.889 \pm 0.009$ & $0.980 \pm 0.003$ &
-      $0.970 \pm 0.003$ & $0.822 \pm 0.015$ \\
-    Random Forest  & $0.943 \pm 0.003$ & $0.835 \pm 0.010$ & $0.976 \pm 0.002$ &
-      $\mathbf{0.987 \pm 0.002}$ & $0.723 \pm 0.015$ \\
-    XGBoost        & $0.961 \pm 0.004$ & $0.896 \pm 0.010$ & $0.985 \pm 0.002$ &
-      $0.960 \pm 0.004$ & $0.840 \pm 0.015$ \\
-    MLP (2-layer)  & $\mathbf{0.965 \pm 0.001}$ & $\mathbf{0.911 \pm 0.004}$ &
-      $\mathbf{0.984 \pm 0.002}$ & $0.938 \pm 0.005$ & $\mathbf{0.886 \pm 0.009}$ \\
+    AE-SVM         & $0.947 \pm 0.002$ & $0.855 \pm 0.007$ & $0.966 \pm 0.003$ & $0.942 \pm 0.009$ & $0.784 \pm 0.009$ \\
+    AE-SVM (anchored) & $0.960 \pm 0.003$ & $0.894 \pm 0.009$ & $0.983 \pm 0.002$ & $0.946 \pm 0.007$ & $0.849 \pm 0.014$ \\
+    RBF-SVM        & $0.948 \pm 0.003$ & $0.864 \pm 0.009$ & $0.976 \pm 0.003$ & $0.908 \pm 0.009$ & $0.824 \pm 0.016$ \\
+    Laplacian-SVM  & $0.946 \pm 0.003$ & $0.857 \pm 0.009$ & $0.976 \pm 0.002$ & $0.913 \pm 0.007$ & $0.808 \pm 0.016$ \\
+    Poly-SVM (d=3) & $0.959 \pm 0.003$ & $0.889 \pm 0.009$ & $0.979 \pm 0.003$ & $0.970 \pm 0.007$ & $0.821 \pm 0.015$ \\
+    Random Forest  & $0.943 \pm 0.003$ & $0.835 \pm 0.009$ & $0.976 \pm 0.002$ & $\mathbf{0.987 \pm 0.003}$ & $0.724 \pm 0.014$ \\
+    XGBoost        & $0.962 \pm 0.003$ & $0.898 \pm 0.008$ & $\mathbf{0.985 \pm 0.002}$ & $0.963 \pm 0.004$ & $0.842 \pm 0.012$ \\
+    MLP (2-layer)  & $\mathbf{0.965 \pm 0.001}$ & $\mathbf{0.911 \pm 0.004}$ & $0.984 \pm 0.002$ & $0.938 \pm 0.007$ & $\mathbf{0.886 \pm 0.009}$ \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -525,29 +453,19 @@ hypothesis, AE-SVM does \emph{not} lead the field: its accuracy is statistically
 indistinguishable from RBF-SVM (paired $t$-test across seeds, $p=0.54$) and it is
 outperformed by Poly-SVM, XGBoost, and MLP on every metric except precision, where
 it edges out RBF-SVM and Laplacian-SVM. AE-SVM's most notable weakness is recall
-($0.784$, the second-lowest of all seven models)---in a security context this
+($0.784$, the second-lowest of the eight models)---in a security context this
 means AE-SVM misses proportionally more attacks than RBF-SVM, XGBoost, or MLP, a
 cost that is easy to overlook if one reports accuracy alone. Random Forest attains
-the highest precision ($0.987$) but the lowest recall ($0.723$), consistent with a
-conservative decision boundary. MLP is the strongest single model on four of five
-metrics, at higher inference cost than the kernel methods (Section~\ref{sec:latency}).
+the highest precision ($0.987$) but the lowest recall ($0.724$), consistent with a
+conservative decision boundary. MLP is the strongest single model on accuracy, F1
+and recall, and is also the fastest at inference (Section~\ref{sec:latency}).
+Anchoring the encoding (Eq.~\ref{eq:anchor}) changes the picture for the amplitude
+kernel: AE-SVM (anchored) reaches $0.960$ accuracy and $0.983$ AUC, significantly
+above both plain AE-SVM and RBF-SVM (paired $t$-tests, $p<10^{-4}$), and within
+$0.005$ of the best model on every metric except recall.
 
-Fig.~\ref{fig:detection} visualizes the performance comparison across all metrics;
-no model dominates on every axis, and the amplitude-encoding kernel occupies the
-middle of the pack rather than leading it.
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig2_detection_performance.png}
-  \caption{Detection performance comparison across seven models and four metrics.
-  MLP leads on accuracy, F1, and AUC; AE-SVM is statistically tied with RBF-SVM
-  and Laplacian-SVM, trailing Poly-SVM, XGBoost, and MLP. Error bars are 95\%
-  confidence intervals over 10 seeds.}
-  \label{fig:detection}
-\end{figure*}
-
-Fig.~\ref{fig:confusion} shows the multi-class (one-vs-rest) confusion matrix for
-an AE-SVM trained to distinguish normal traffic from all five attack types
+Fig.~\ref{fig:confusion} shows the confusion matrix of a one-vs-rest multi-class
+AE-SVM trained to distinguish normal traffic from all five attack types
 simultaneously. Per-class recall ranges from $0.662$ (DDoS, exfiltration, ARP
 spoofing) to $0.862$ (DNS tunneling), with the dominant error mode being attacks
 misclassified as \emph{normal} (false negatives, $13$--$33\%$ of each attack
@@ -556,32 +474,23 @@ for every attack pair. This is a materially different failure pattern than a
 kernel that primarily confuses semantically similar attacks with each other; here
 the practical risk is under-alerting, not misattribution.
 
-\begin{figure*}[t]
+\begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{fig8_confusion.png}
-  \caption{AE-SVM multi-class (one-vs-rest) confusion matrix (\%). The dominant
+  \caption{Row-normalized confusion matrix (\%) of a one-vs-rest multi-class AE-SVM. The dominant
   error mode is attacks misclassified as normal traffic (false negatives),
   ranging from $13\%$ (DNS tunneling) to $33\%$ (DDoS, exfiltration, ARP
   spoofing); confusion between different attack types is negligible.}
   \label{fig:confusion}
-\end{figure*}
+\end{figure}
 
-Fig.~\ref{fig:roc} shows one-vs-rest ROC curves by class. AUC values range from
+Per-class one-vs-rest ROC-AUCs range from
 $0.930$ (normal, the majority class) to $0.993$ (DNS tunneling), confirming that
 ranking quality remains strong even where the fixed-threshold recall in
 Fig.~\ref{fig:confusion} is weaker---the errors above are a threshold-calibration
 issue as much as a ranking one.
 
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig9_roc.png}
-  \caption{One-vs-rest ROC curves per class for AE-SVM. AUCs range from $0.930$
-  to $0.993$; ranking quality is consistently strong even for classes with lower
-  fixed-threshold recall in Fig.~\ref{fig:confusion}.}
-  \label{fig:roc}
-\end{figure*}
-
-\subsection{Matched-$n$ Ablation}
+\subsection{\texorpdfstring{Matched-$n$}{Matched-n} Ablation}
 
 We perform a controlled ablation at identical training sizes $n \in \{50, 100, 200,
 500, 1000, 2000, 5000\}$ for AE-SVM, RBF-SVM, and Laplacian-SVM, 5 seeds per point
@@ -595,19 +504,19 @@ and not a reproduction of a genuine growing advantage. If anything, the honest
 reading of Fig.~\ref{fig:matched_n} is that AE-SVM needs \emph{more} data than RBF
 to reach the same accuracy, not less.
 
-\begin{figure*}[t]
+\begin{figure}[t]
   \centering
-  \includegraphics[width=0.85\columnwidth]{fig3_matched_n.png}
+  \includegraphics[width=\columnwidth]{fig3_matched_n.png}
   \caption{Matched-$n$ accuracy comparison (mean $\pm$ 95\% CI, 5 seeds). AE-SVM
   trails RBF-SVM at small $n$ (by $3.6$~pp at $n=50$) and only reaches parity by
   $n\approx1000$--$5000$; there is no sustained, growing advantage for the
   amplitude-encoding kernel at any tested scale.}
   \label{fig:matched_n}
-\end{figure*}
+\end{figure}
 
 We note that the same amplitude-encoding kernel was previously evaluated on QKD
-telemetry in a companion study~\cite{kapoor2026hyqad}, where it also failed to
-outperform classical baselines at any tested scale. The two results are
+telemetry in a companion study~\cite{kapoor2026hyqad}, where it was never
+reliably ahead of an RBF kernel at any matched training size either. The two results are
 consistent with each other, and the kernel-target alignment analysis
 (Fig.~\ref{fig:alignment}) explains why: on ZTNA flow data, RBF's alignment with
 the label structure ($0.21$ mean across attack types) is consistently
@@ -619,21 +528,11 @@ alignment with the true label structure exceeds RBF's.
 
 To characterize the accuracy/latency trade-off of the deployed Nystr\"om
 approximation directly (rather than an SVM training curve, which does not apply
-to a QP-solved kernel SVM), Fig.~\ref{fig:convergence} sweeps the number of
+to a QP-solved kernel SVM), we sweep the number of
 Nystr\"om landmarks $m$ at fixed $n=4{,}200$. Accuracy is essentially flat from
 $m=50$ landmarks onward while latency grows linearly with $m$, indicating that
 $m=50$--$100$ (the setting used throughout this paper) is already past the point
 of diminishing returns.
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig15_convergence.png}
-  \caption{Nystr\"om landmark-count ablation for AE-SVM at $n=4{,}200$. Left:
-  test accuracy vs.\ landmark count $m$. Right: inference latency vs.\ $m$.
-  Accuracy plateaus by $m\approx50$ while latency grows roughly linearly,
-  identifying the operating point used throughout the paper.}
-  \label{fig:convergence}
-\end{figure*}
 
 \subsection{Certified Robustness}
 
@@ -645,17 +544,18 @@ achieved \emph{median} radius saturates at the same ceiling value
 attack types, since most correctly-classified points see unanimous agreement
 across noise draws; the two kernels are distinguished instead by their
 \emph{mean} radius and abstention rate. RBF-SVM's mean radius is both slightly
-higher and more consistent across attack types ($0.511$--$0.516$) than AE-SVM's
+higher and more consistent across attack types ($0.511$--$0.525$) than AE-SVM's
 ($0.485$--$0.529$), and AE-SVM abstains (fails to certify, $p_A^{\text{lower}}
 \leq 0.5$) on $1.8\%$ of points versus $0\%$ for RBF-SVM. Both kernels are
 reasonably robust at this noise level; the difference is small and favors
 RBF-SVM rather than AE-SVM, which does not support a Lipschitz-driven robustness
 advantage for the amplitude encoding on this data.
 
-\begin{table*}[t]
+\begin{table}[t]
   \centering
   \caption{Certified $\ell_2$ robustness at $\alpha=0.05$, $\sigma=0.25$, $n=300$
-  (mean radius over correctly-classified, non-abstained test points, 3 seeds).}
+  (mean $\pm$ standard deviation of the radius over certified test points, pooled
+  over 3 seeds; abstentions are excluded from the radius statistics).}
   \label{tab:robustness}
   \small
   \begin{tabular}{lcc}
@@ -671,17 +571,7 @@ advantage for the amplitude encoding on this data.
     Abstention rate & $1.8\%$ & $0.0\%$ \\
     \bottomrule
   \end{tabular}
-\end{table*}
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig4_certified_radii.png}
-  \caption{Certified $\ell_2$ robustness by attack type at $\alpha=0.05$,
-  $\sigma=0.25$. Median radii are ceiling-saturated at this certification budget
-  for both kernels; RBF-SVM's mean radius is marginally higher and more
-  consistent across attack types than AE-SVM's.}
-  \label{fig:certified}
-\end{figure*}
+\end{table}
 
 \subsection{Sensitivity and Zero-Day Generalization}
 
@@ -689,45 +579,39 @@ We evaluate sensitivity to traffic noise by scaling the Gaussian noise component
 of normal traffic: $\sigma_{\text{noise}} \in [0.05, 1.0]$. Both kernels are
 essentially flat across this range: AE-SVM accuracy moves from $0.939$ at
 $\sigma_{\text{noise}}=0.05$ to $0.935$ at $\sigma_{\text{noise}}=1.0$, and
-RBF-SVM from $0.932$ to $0.935$ over the same range (Fig.~\ref{fig:sensitivity}).
+RBF-SVM from $0.932$ to $0.935$ over the same range.
 Neither kernel shows the kind of graceful-degradation gap that would indicate a
 meaningfully different noise operating range; if anything AE-SVM degrades
 slightly (by $0.4$ pp) while RBF-SVM is stable to marginally improving.
 
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig5_sensitivity.png}
-  \caption{Sensitivity to traffic noise. Both kernels remain within $1$~pp of
-  their $\sigma_{\text{noise}}=0.05$ accuracy across the full sweep; there is no
-  meaningful difference in noise robustness between AE-SVM and RBF-SVM.}
-  \label{fig:sensitivity}
-\end{figure*}
-
 For zero-day attack generalization, we train on four attack types plus normal
 traffic and test on the held-out fifth (leave-one-attack-out). Here the two
-kernels diverge sharply, and not in AE-SVM's favor: on four of five held-out
-scenarios, AE-SVM's AUC falls to $0.45$--$0.61$ (at or below chance for ARP
-spoofing and DNS tunneling), while RBF-SVM retains $0.81$--$0.89$ AUC on every
-held-out type (Fig.~\ref{fig:zeroday}). Mean zero-day AUC is $0.52$ for AE-SVM
-versus $0.84$ for RBF-SVM. This is the largest and most consistent gap we observe
-anywhere in this paper, and it runs opposite to AE-SVM's marginal in-distribution
-competitiveness (Table~\ref{tab:detection}): the cosine-similarity encoding
-appears to fit distribution-specific structure that does not transfer to a novel
-attack signature, whereas RBF's smoother, locality-based decision boundary
-degrades far less under distribution shift. For a ZTNA deployment, where the
-threat model explicitly includes attacks not seen during training, this is a
-practically important reason to prefer RBF-SVM over AE-SVM despite their
-comparable in-distribution accuracy.
+kernels diverge sharply, and not in AE-SVM's favor: on every held-out type,
+AE-SVM's AUC is $0.45$--$0.61$ (at or below chance for ARP spoofing and DNS
+tunneling), while RBF-SVM retains $0.81$--$0.89$ (Fig.~\ref{fig:zeroday}). Mean
+zero-day AUC is $0.526$ for AE-SVM versus $0.839$ for RBF-SVM.
 
-\begin{figure*}[t]
+The invariance of Section~\ref{sec:method} predicts this. An attack type never
+seen in training is most easily recognised by being \emph{far} from normal
+traffic, and on standardized features that distance is the input's norm, which
+$K_A$ discards. Two controls test the prediction. Mapping features to $[0,1]$
+before encoding, which removes the $\mathbf{x}\mapsto-\mathbf{x}$ ambiguity but
+not the norm invariance, raises mean zero-day AUC only to $0.593$. The
+norm-anchored encoding of Eq.~\ref{eq:anchor}, which restores the norm, raises it
+to $0.793$, within $0.05$ of RBF-SVM, with no tuning on held-out attacks. On this
+data the zero-day failure is therefore a consequence of norm invariance
+specifically, and it is largely removed by a one-coordinate change to the
+encoding. Section~\ref{sec:real} shows that the failure does not appear on the
+public benchmarks.
+
+\begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{fig6_zeroday.png}
-  \caption{Zero-day attack generalization (leave-one-attack-out). AE-SVM's
-  held-out AUC collapses to $0.45$--$0.61$ on four of five attack types (at or
-  below the $0.5$ chance line for two), while RBF-SVM retains $0.81$--$0.89$ AUC
-  throughout---the single largest and most consistent gap observed in this study.}
+  \caption{Zero-day attack generalization (leave-one-attack-out, mean $\pm$ 95\% CI,
+  5 seeds). Plain AE-SVM falls to $0.45$--$0.61$ AUC; non-negative inputs barely
+  help, while the norm-anchored encoding recovers most of the gap to RBF-SVM.}
   \label{fig:zeroday}
-\end{figure*}
+\end{figure}
 
 \subsection{Effect of Feature Dimensionality}
 
@@ -743,7 +627,7 @@ that sparser, higher-dimensional feature spaces favor the cosine-similarity
 inductive bias; on this data the opposite trend, if anything, holds at the
 extremes.
 
-\begin{figure*}[t]
+\begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{fig10_dimensionality.png}
   \caption{Accuracy gap (AE-SVM minus RBF-SVM) as a function of feature
@@ -751,7 +635,7 @@ extremes.
   largest $d$ tested, with no sustained growth favoring AE-SVM as dimensionality
   increases -- the opposite of the inductive-bias hypothesis motivating this study.}
   \label{fig:dimensionality}
-\end{figure*}
+\end{figure}
 
 \subsection{Kernel Alignment Analysis}
 
@@ -765,7 +649,7 @@ this data, we compute the kernel-target alignment~\cite{cristianini2002kernel}:
 \label{eq:alignment}
 \end{equation}
 
-\begin{figure*}[t]
+\begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{fig13_kernel_alignment.png}
   \caption{Kernel-target alignment by attack type (5 seeds, $n=800$ per attack).
@@ -775,7 +659,7 @@ this data, we compute the kernel-target alignment~\cite{cristianini2002kernel}:
   task; the ordering here is opposite to what an amplitude-encoding advantage
   would require.}
   \label{fig:alignment}
-\end{figure*}
+\end{figure}
 
 Fig.~\ref{fig:alignment} shows that RBF-SVM achieves higher kernel-target
 alignment than AE-SVM across every attack type ($0.21$ vs.\ $0.13$ mean
@@ -790,43 +674,35 @@ single attack's perturbation design.
 
 \subsection{Uncertainty Quantification and Selective Prediction}
 
-\begin{figure*}[t]
+\begin{figure}[t]
   \centering
   \includegraphics[width=\columnwidth]{fig11_uncertainty.png}
   \caption{Selective prediction: coverage and accuracy as functions of the
-  Platt-scaled uncertainty threshold $u$ for AE-SVM. At $u<0.3$, accuracy reaches
+  Platt-scaled uncertainty threshold $u$ for AE-SVM. At $u<0.31$, accuracy reaches
   $97.4\%$ on $75.5\%$ of the evaluation set, with the remaining $24.5\%$
-  deferred for human analyst review; at $u<0.1$, accuracy reaches $99.9\%$ on a
-  smaller $20\%$ of the set. This enables a tunable trade-off between automation
+  deferred for human analyst review; at $u<0.10$, accuracy reaches $99.9\%$ on a
+  smaller $26.8\%$ of the set. This enables a tunable trade-off between automation
   and oversight.}
   \label{fig:uncertainty}
-\end{figure*}
+\end{figure}
 
 Platt-scaled AE-SVM probabilities (Eq.~\ref{eq:platt}) provide usable, if
 imperfect, uncertainty for selective prediction (Fig.~\ref{fig:uncertainty}).
-At a modest uncertainty threshold of $u<0.3$, accuracy reaches $97.4\%$ on
+At a modest uncertainty threshold of $u<0.31$, accuracy reaches $97.4\%$ on
 $75.5\%$ of the evaluation set, with the remaining $24.5\%$ of high-uncertainty
-samples deferred for human analyst review; tightening to $u<0.1$ pushes accuracy
-to $99.9\%$ at $20\%$ coverage. Unlike the detection and generalization results
+samples deferred for human analyst review; tightening to $u<0.10$ pushes accuracy
+to $99.9\%$ at $26.8\%$ coverage. Unlike the detection and generalization results
 above, this mechanism does not depend on which kernel is used underneath Platt
 scaling---the same selective-prediction machinery would apply equally well to a
-Platt-scaled RBF-SVM (or to the deployed model of our companion QKD study,
-whose Bayesian GP posterior serves the same role natively)~\cite{kapoor2026hyqad}.
+Platt-scaled RBF-SVM. (In our companion QKD study~\cite{kapoor2026hyqad}, a
+Gaussian-process posterior was a \emph{worse} basis for deferral than an
+isotonic-calibrated random forest, so model-based uncertainty is not
+automatically preferable.)
 
 \subsection{Latency and Resource Analysis}
 \label{sec:latency}
 
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig7_latency.png}
-  \caption{Per-sample inference latency (single CPU core, mean over 30 runs).
-  The deployed AE-SVM with Nystr\"om approximation achieves $0.0048$\,ms,
-  marginally faster than RBF-SVM's Nystr\"om variant and orders of magnitude
-  below any line-rate flow-processing budget.}
-  \label{fig:latency}
-\end{figure*}
-
-Table~\ref{tab:latency} and Fig.~\ref{fig:latency} report per-sample inference
+Table~\ref{tab:latency} reports per-sample inference
 latency for $n=4{,}000$ training, $m=50$ Nystr\"om landmarks. AE-SVM with
 Nystr\"om approximation (Eq.~\ref{eq:nystrom}) reaches $0.0048$\,ms per sample,
 about $1.2\times$ faster than the RBF-SVM Nystr\"om variant ($0.0056$\,ms)---a
@@ -839,7 +715,7 @@ far below any plausible per-flow processing budget, and Random Forest and MLP
 inference are of comparable or lower latency once accuracy is also considered
 (Table~\ref{tab:detection}).
 
-\begin{table*}[t]
+\begin{table}[t]
   \centering
   \caption{Per-sample inference latency (single CPU core, mean over 30 runs,
   $n=4{,}000$ training, $m=50$ landmarks where applicable).}
@@ -857,15 +733,59 @@ inference are of comparable or lower latency once accuracy is also considered
     Random Forest (200 trees)   & 0.0623 & 12.98$\times$ \\
     \bottomrule
   \end{tabular}
-\end{table*}
+\end{table}
 
-\subsection{Training Convergence}
+\section{Evaluation on Public Datasets}
+\label{sec:real}
 
-Fig.~\ref{fig:convergence} shows training dynamics at $n = 5000$. AE-SVM converges
-in approximately 25 epochs---roughly $1.4\times$ faster than RBF-SVM---and reaches
-a higher asymptotic validation accuracy. The faster convergence is attributable to
-the amplitude-encoding kernel's higher alignment with the label structure, which provides a
-more informative gradient signal during dual optimization.
+\textbf{Data.} UNSW-NB15~\cite{moustafa2015unsw}: the official partition
+(175,341 training and 82,332 test records), 39 numeric features plus one-hot
+protocol, service and state (68 features), nine attack families.
+CIC-IDS2017~\cite{sharafaldin2018toward}: the eight MachineLearningCVE day files
+(2,830,743 flows); we drop rows with missing or infinite values, remove 308,381
+exact duplicates and constant columns (69 features), drop classes with fewer than
+100 flows, group labels into six families and use a fixed stratified 70/30 split.
+Features are mapped through $\operatorname{sign}(x)\log(1+|x|)$ and standardized on the
+training sample. Each of 5 seeds draws a family-stratified training sample of
+20,000 flows and a test sample of 50,000; kernel SVMs use 1000 Nystr\"om landmarks.
+We add a $3\times256$ deep network (DNN) and a Kitsune-style autoencoder trained
+on benign flows only~\cite{mirsky2018kitsune}.
+
+\begin{table}[t]
+  \centering
+  \caption{Detection on public benchmarks (F1 and ROC-AUC, mean $\pm$ 95\% CI, 5 seeds).}
+  \label{tab:real}
+  \scriptsize
+  \setlength{\tabcolsep}{2.5pt}
+  \begin{tabular}{lcccc}
+    \toprule
+    & \multicolumn{2}{c}{UNSW-NB15} & \multicolumn{2}{c}{CIC-IDS2017} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+    Model & F1 & AUC & F1 & AUC \\
+    \midrule
+    AE-SVM & $.887{\scriptstyle\pm.003}$ & $.973{\scriptstyle\pm.001}$ & $.979{\scriptstyle\pm.001}$ & $.999{\scriptstyle\pm.000}$ \\
+    AE-SVM (anchored) & $.884{\scriptstyle\pm.003}$ & $.972{\scriptstyle\pm.001}$ & $.977{\scriptstyle\pm.001}$ & $.998{\scriptstyle\pm.000}$ \\
+    AE-SVM (nonneg) & $.877{\scriptstyle\pm.003}$ & $.969{\scriptstyle\pm.001}$ & $.970{\scriptstyle\pm.002}$ & $.997{\scriptstyle\pm.000}$ \\
+    RBF-SVM & $.887{\scriptstyle\pm.003}$ & $.973{\scriptstyle\pm.001}$ & $.983{\scriptstyle\pm.001}$ & $.999{\scriptstyle\pm.000}$ \\
+    Laplacian-SVM & $.899{\scriptstyle\pm.004}$ & $.978{\scriptstyle\pm.001}$ & $.987{\scriptstyle\pm.001}$ & $\mathbf{.999{\scriptstyle\pm.000}}$ \\
+    Poly-SVM & $.889{\scriptstyle\pm.003}$ & $.975{\scriptstyle\pm.001}$ & $.989{\scriptstyle\pm.001}$ & $.999{\scriptstyle\pm.000}$ \\
+    RF & $.889{\scriptstyle\pm.003}$ & $.980{\scriptstyle\pm.001}$ & $.990{\scriptstyle\pm.002}$ & $\mathbf{.999{\scriptstyle\pm.000}}$ \\
+    XGBoost & $.892{\scriptstyle\pm.003}$ & $\mathbf{.981{\scriptstyle\pm.001}}$ & $\mathbf{.994{\scriptstyle\pm.001}}$ & $\mathbf{1.000{\scriptstyle\pm.000}}$ \\
+    MLP & $.889{\scriptstyle\pm.004}$ & $.975{\scriptstyle\pm.001}$ & $.991{\scriptstyle\pm.001}$ & $\mathbf{.999{\scriptstyle\pm.000}}$ \\
+    DNN & $\mathbf{.909{\scriptstyle\pm.006}}$ & $.977{\scriptstyle\pm.002}$ & $.989{\scriptstyle\pm.002}$ & $\mathbf{.999{\scriptstyle\pm.000}}$ \\
+    Autoencoder & $.394{\scriptstyle\pm.187}$ & $.887{\scriptstyle\pm.009}$ & $.546{\scriptstyle\pm.058}$ & $.948{\scriptstyle\pm.012}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig17_real_zeroday.png}
+  \caption{Leave-one-attack-family-out ROC-AUC on the public benchmarks (mean $\pm$ 95\% CI, 3 seeds).}
+  \label{fig:realzd}
+\end{figure*}
+
+Table~\ref{tab:real} reports in-distribution detection. AE-SVM and RBF-SVM are statistically tied on UNSW-NB15 and AE-SVM is marginally worse on CIC-IDS2017; tree ensembles, the Laplacian kernel and the DNN lead. On held-out attack families (Fig.~\ref{fig:realzd}) mean AUC is $0.945$ for AE-SVM versus $0.932$ for RBF-SVM on UNSW-NB15, and $0.715$ versus $0.658$ on CIC-IDS2017; the norm-anchored encoding gives $0.940$ and $0.733$, and the benign-only autoencoder $0.860$ and $0.874$.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -898,37 +818,32 @@ increasingly proposed for security applications on the strength of their
 theoretical novelty; our results are a concrete, reproducible counter-example
 that such maps should be validated empirically, under matched-scale conditions,
 before being adopted -- an in-distribution accuracy gain evaluated only at one
-$(n,d)$ operating point (as our own earlier draft of this paper did) can look
-like a durable advantage that a matched-scale sweep shows is not there.
+$(n,d)$ operating point can look like a durable advantage that a matched-scale
+sweep shows is not there.
 
 \subsection{The Zero-Day Generalization Gap}
 
-The one place AE-SVM and RBF-SVM diverge sharply is generalization to unseen
-attack types (Fig.~\ref{fig:zeroday}): AE-SVM's held-out AUC collapses to
-$0.45$--$0.61$ on four of five leave-one-attack-out scenarios, while RBF-SVM
-holds $0.81$--$0.89$ throughout. A plausible mechanism is that the amplitude
-encoding's angle-only representation, having discarded magnitude information,
-ends up fitting attack-specific angular structure in the training distribution
-more tightly than RBF's smoother, locality-based boundary -- and that
-attack-specific structure does not transfer to a novel attack's angular
-signature. We did not design this experiment to confirm a hypothesized
-advantage; it surfaced as we characterized the models, and we think it is the
-paper's most actionable finding for practitioners: a kernel that looks
-competitive in-distribution may still be the wrong choice for a threat model
-that explicitly includes attacks not present during training, which is the
-normal case for ZTNA deployments.
+On synthetic flows, the one place plain AE-SVM and RBF-SVM diverge sharply is
+generalization to unseen attack types (Fig.~\ref{fig:zeroday}), and the controls
+in Section~\ref{sec:results} identify the cause: amplitude encoding discards the
+input's norm, which there is the signal that separates a novel attack from
+normal traffic. Our companion QKD study~\cite{kapoor2026hyqad} finds the same
+mechanism when its one magnitude-carrying feature is removed. The public
+benchmarks (Section~\ref{sec:real}) show that this is not a general property of
+real traffic: there AE-SVM matches or slightly exceeds RBF-SVM on held-out
+families. For practitioners the lesson is that a kernel's invariances predict
+\emph{how} it can fail, but only a held-out-family evaluation on representative
+data shows \emph{whether} it does.
 
 \subsection{Certified Robustness: A Modest, Neutral-to-Negative Result}
 
 The certified-robustness comparison (Table~\ref{tab:robustness}) does not show a
 Lipschitz-driven advantage for amplitude encoding either: mean certified radii
 are comparable between the two kernels, with RBF-SVM slightly higher and more
-consistent across attack types, and AE-SVM abstaining more often. The
-$L_2$-normalization argument for amplitude encoding's robustness
-(Eq.~\ref{eq:lipschitz}) is directionally correct---normalized inputs do bound
-the encoding's sensitivity---but this alone was not sufficient to produce a
-measurable certified-radius advantage over RBF-SVM on this data at our
-certification budget ($n=300$ Monte Carlo samples).
+consistent across attack types, and AE-SVM abstaining more often. Eq.~\ref{eq:lipschitz} explains why: normalization only contracts
+perturbations of large-norm inputs, and standardized benign flows cluster near
+the origin, where it amplifies them; we observe no certified-radius advantage
+over RBF-SVM at our certification budget ($n=300$ Monte Carlo samples).
 
 \subsection{The One Real Advantage: Latency}
 
@@ -943,12 +858,10 @@ zero-day generalization costs documented above.
 \subsection{Limitations}
 
 Several limitations merit acknowledgment. First, our synthetic network flow
-generator (Section~\ref{sec:experiments}) is a marginal-plus-copula model
-calibrated to aggregate NetFlow statistics, not a packet-level simulation or
-real enterprise capture; validating these findings on a real ZTNA telemetry feed
-or a public IDS benchmark such as CICIDS2017~\cite{sharafaldin2018toward} or
-UNSW-NB15~\cite{moustafa2015unsw} is necessary before drawing
-operational conclusions. Second, our attack perturbations are latent-space shifts
+generator (Section~\ref{sec:experiments}) is a marginal-plus-copula model, not a
+packet-level simulation; the public benchmarks of Section~\ref{sec:real} address
+this in part, but both have known labeling and distribution artifacts, and
+neither is live zero-trust telemetry. Second, our attack perturbations are latent-space shifts
 of fixed magnitude and dimension count, a modeling choice rather than an
 empirically calibrated attack model; the zero-day generalization gap in
 particular should be re-examined on real, less synthetic attack signatures.
@@ -957,49 +870,29 @@ classifiers, do not address semantic perturbations (e.g., mimicry attacks that
 preserve a flow's statistical profile while changing its content), and our
 certification budget ($n=300$ noise draws) leaves the achieved median radius
 ceiling-saturated rather than fully resolved (Section~\ref{sec:results}).
-Fourth, all comparisons in this paper are against the same set of classical
-kernels and off-the-shelf classifiers; we have not benchmarked against deep
-learning IDS baselines (autoencoder ensembles, graph neural networks) named in
-Section~\ref{sec:related}, and doing so is necessary before any claim about
-this pipeline's competitiveness against the current state of the art in network
-intrusion detection.
+Fourth, our deep baselines are a feed-forward DNN and a single Kitsune-style
+autoencoder; graph and sequence models over flow histories may be stronger, and
+kernel hyperparameters were not tuned per dataset for any kernel.
 
 \FloatBarrier
-\vspace{-1ex}
 \section{Conclusion}
 \label{sec:conclusion}
 
-We built Q-ZTNA to test whether an amplitude-encoding (cosine-similarity) kernel
-provides a real advantage for zero-trust network anomaly detection, using a
-matched-scale, matched-dimensionality evaluation protocol rather than a single
-operating point. Under that protocol, AE-SVM reaches $0.947 \pm 0.002$ detection
-accuracy with $0.0048$\,ms inference latency (Nystr\"om-approximated), but is
-statistically indistinguishable from an RBF-kernel SVM on accuracy ($p=0.54$),
-trails RBF-SVM at both small and large feature dimensionality, and shows
-consistently lower kernel-target alignment with the true label structure across
-every attack type. Certified $\ell_2$ robustness is comparable between the two
-kernels, marginally favoring RBF-SVM. The one place AE-SVM is unambiguously
-better is inference latency ($1.2\times$ faster than RBF-SVM), and the one place
-it is unambiguously worse -- and, we think, most practically important -- is
-zero-day generalization: on four of five leave-one-attack-out scenarios its AUC
-falls to $0.45$--$0.61$ while RBF-SVM retains $0.81$--$0.89$.
-
-Taken together with our companion evaluation of the same kernel on QKD
-telemetry~\cite{kapoor2026hyqad}, which reached the same null result by an
-independent matched-$n$ protocol, we do not find evidence that the
-amplitude-encoding/cosine-similarity kernel provides a reliable advantage over
-classical kernels in either of the two security domains we have tested it on. We
-report this as a cautionary, reproducible finding rather than a positive result:
-practitioners and researchers evaluating ``quantum-inspired'' kernels for
-security applications should budget for a matched-scale comparison against
-standard kernels, including an explicit zero-day/distribution-shift test, before
-concluding that such a kernel's theoretical novelty translates into an empirical
-advantage. Future work includes validating these findings against a real or
-public-benchmark network traffic dataset, benchmarking against deep-learning IDS
-baselines (autoencoder ensembles, GNNs), and investigating why the
-amplitude-encoding kernel's zero-day generalization gap arises -- and whether it
-generalizes to other angle-only feature maps beyond amplitude encoding
-specifically.
+Under a matched-scale, matched-dimensionality protocol, the amplitude-encoding
+kernel gives no in-distribution advantage over an RBF kernel for zero-trust flow
+anomaly detection, on synthetic flows or on UNSW-NB15 and CIC-IDS2017, and it
+needs more data than RBF at small $n$. On synthetic flows it fails on attack
+types absent from training; that failure follows from its invariance to input
+norm, and appending a single norm-anchor coordinate before encoding repairs most
+of it while also improving in-distribution accuracy. On UNSW-NB15 and
+CIC-IDS2017 it does not fail (mean held-out AUC $0.945$ vs.\ $0.932$ for RBF on UNSW-NB15; $0.715$ vs.\ $0.658$ for RBF on CIC-IDS2017), which shows that held-out-attack
+evaluation on real traffic, not only on a simulator, is needed before drawing
+conclusions about a kernel's generalization. Our
+companion QKD study~\cite{kapoor2026hyqad} finds the same mechanism in a
+physical-layer domain. Quantum-inspired detectors for security should be
+evaluated on unseen attack types and their invariances checked before
+deployment. Natural next steps are angle and entangling feature maps, whose
+invariances differ, and evaluation on live enterprise telemetry.
 
 \section*{Code and Data Availability}
 The full implementation (network flow simulator, amplitude-encoding/RBF/Laplacian/
@@ -1010,156 +903,12 @@ table and figure in this paper are available at
 
 \section*{Acknowledgments}
 
-The authors thank the IISER Bhopal Department of Computer Science for computational
+The author thanks the IISER Bhopal Department of Computer Science for computational
 resources. We thank the open-source Python ecosystem
 (NumPy, SciPy, scikit-learn, XGBoost, Matplotlib) for enabling rapid prototyping of
 kernel-method and quantum-inspired machine learning pipelines on commodity hardware.
 
-\begin{thebibliography}{50}
-
-\bibitem{rose2020zero}
-S.~Rose, O.~Borchert, S.~Mitchell, and S.~Connelly,
-``Zero trust architecture,'' NIST Special Publication 800-207, 2020.
-
-\bibitem{kindervag2010zero}
-J.~Kindervag,
-``Build security into your network's DNA: The zero trust network architecture,''
-Forrester Research, 2010.
-
-\bibitem{nist800207}
-NIST,
-``Zero trust architecture,'' SP 800-207, 2020.
-
-\bibitem{gilman2019zero}
-E.~Gilman and D.~Barth,
-\textit{Zero Trust Networks}. O'Reilly Media, 2019.
-
-\bibitem{roesch1999snort}
-M.~Roesch,
-``Snort: Lightweight intrusion detection for networks,'' in
-\textit{Proc. USENIX LISA}, 1999, pp.~229--238.
-
-\bibitem{sommer2010machine}
-R.~Sommer and V.~Paxson,
-``Outside the closed world: On using machine learning for network intrusion
-detection,'' in \textit{Proc. IEEE S\&P}, 2010, pp.~305--316.
-
-\bibitem{mirsky2018kitsune}
-Y.~Mirsky, T.~Doitshman, Y.~Elovici, and A.~Shabtai,
-``Kitsune: An ensemble of autoencoders for online network intrusion detection,''
-in \textit{Proc. NDSS}, 2018.
-
-\bibitem{goodfellow2014explaining}
-I.~J.~Goodfellow, J.~Shlens, and C.~Szegedy,
-``Explaining and harnessing adversarial examples,'' in
-\textit{Proc. ICLR}, 2015.
-
-\bibitem{havlicek2019supervised}
-V.~Havl\'{i}\v{c}ek \textit{et al.},
-``Supervised learning with quantum-enhanced feature spaces,''
-\textit{Nature}, vol.~567, pp.~209--212, 2019.
-
-\bibitem{liu2021quantum}
-Y.~Liu \textit{et al.},
-``Quantum advantage of kernel methods,''
-\textit{Phys. Rev. Lett.}, vol.~126, no.~13, p.~130501, 2021.
-
-\bibitem{huang2021power}
-H.-Y.~Huang \textit{et al.},
-``Power of data in quantum machine learning,''
-\textit{Nat. Commun.}, vol.~12, p.~2631, 2021.
-
-\bibitem{webb2023quantum}
-E.~Webb, A.~Nadkarni, and S.~Rowe,
-``Quantum adversarial machine learning: A survey,''
-\textit{Quantum Mach. Intell.}, vol.~5, p.~12, 2023.
-
-\bibitem{ashraf2020zero}
-A.~Ashraf, W.~Iqbal, and H.~Abbas,
-``Zero-trust security for IoT: A systematic literature review,''
-\textit{IEEE Access}, vol.~8, pp.~219~930--219~946, 2020.
-
-\bibitem{wang2021user}
-X.~Wang, Y.~Li, and W.~Lin,
-``User and entity behavior analytics for enterprise security,''
-\textit{Comput. Secur.}, vol.~102, p.~102144, 2021.
-
-\bibitem{zhou2020graph}
-J.~Zhou \textit{et al.},
-``Graph neural networks: A review of methods and applications,''
-\textit{AI Open}, vol.~1, pp.~57--81, 2020.
-
-\bibitem{wu2022transformer}
-T.~Wu \textit{et al.},
-``A transformer-based framework for multivariate time series representation
-learning,'' in \textit{Proc. ACM SIGKDD}, 2022, pp.~20--30.
-
-\bibitem{vale2023quantum}
-I.~do~Vale, K.~F.~Santos, and E.~F.~Silva,
-``Quantum support vector machines for intrusion detection,''
-\textit{Quantum Inf. Process.}, vol.~22, p.~89, 2023.
-
-\bibitem{suryotrisongko2022quantum}
-H.~Suryotrisongko and Y.~Musashi,
-``Evaluating hybrid quantum machine learning models for malware classification,''
-\textit{J. Inf. Secur. Appl.}, vol.~67, p.~103193, 2022.
-
-\bibitem{cohen2019certified}
-J.~Cohen, E.~Rosenfeld, and Z.~Kolter,
-``Certified adversarial robustness via randomized smoothing,''
-in \textit{Proc. ICML}, 2019, pp.~1310--1320.
-
-\bibitem{cristianini2002kernel}
-N.~Cristianini, J.~Shawe-Taylor, A.~Elisseeff, and J.~Kandola,
-``On kernel-target alignment,'' in \textit{Proc. NeurIPS}, 2002, pp.~367--373.
-
-\bibitem{williams2001nystrom}
-C.~K.~I.~Williams and M.~Seeger,
-``Using the Nystr\"om method to speed up kernel machines,''
-in \textit{Proc. NeurIPS}, 2001, pp.~682--688.
-
-\bibitem{platt1999probabilistic}
-J.~C.~Platt,
-``Probabilistic outputs for support vector machines and comparisons to regularized
-likelihood methods,'' in \textit{Advances in Large Margin Classifiers}, 1999,
-pp.~61--74.
-
-\bibitem{scholkopf2002learning}
-B.~Sch\"olkopf and A.~J.~Smola,
-\textit{Learning with Kernels}. MIT Press, 2002.
-
-\bibitem{bishop2006pattern}
-C.~M.~Bishop,
-\textit{Pattern Recognition and Machine Learning}. Springer, 2006.
-
-\bibitem{kapoor2026hyqad}
-A.~Kapoor,
-``Calibrated uncertainty quantification for QKD anomaly detection,'' unpublished manuscript, 2026.
-
-\bibitem{breiman2001random}
-L.~Breiman,
-``Random forests,'' \textit{Mach. Learn.}, vol.~45, no.~1, pp.~5--32, 2001.
-
-\bibitem{chen2016xgboost}
-T.~Chen and C.~Guestrin,
-``XGBoost: A scalable tree boosting system,'' in \textit{Proc. ACM SIGKDD}, 2016, pp.~785--794.
-
-\bibitem{guo2017calibration}
-C.~Guo, G.~Pleiss, Y.~Sun, and K.~Q.~Weinberger,
-``On calibration of modern neural networks,'' in \textit{Proc. ICML}, PMLR vol.~70, 2017, pp.~1321--1330.
-
-\bibitem{buczak2016survey}
-A.~L.~Buczak and E.~Guven,
-``A survey of data mining and machine learning methods for cyber security intrusion detection,'' \textit{IEEE Commun. Surv. Tutor.}, vol.~18, no.~2, pp.~1153--1176, 2016.
-
-\bibitem{sharafaldin2018toward}
-I.~Sharafaldin, A.~H.~Lashkari, and A.~A.~Ghorbani,
-``Toward generating a new intrusion detection dataset and intrusion traffic characterization,'' in \textit{Proc. ICISSP}, 2018, pp.~108--116.
-
-\bibitem{moustafa2015unsw}
-N.~Moustafa and J.~Slay,
-``UNSW-NB15: A comprehensive data set for network intrusion detection systems,'' in \textit{Proc. MilCIS}, 2015, pp.~1--6.
-
-\end{thebibliography}
+\bibliographystyle{IEEEtran}
+\bibliography{../references}
 
 \end{document}

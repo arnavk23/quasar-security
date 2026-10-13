@@ -1,45 +1,52 @@
 cff-version: 1.2.0
-message: "If you use this software or these results, please cite the papers below."
+message: "If you use this software or these results, please cite the paper below."
 title: "QUASAR: QUantum-inspired Anomaly detection with Statistically-Audited Robustness"
 abstract: >-
-  A matched-scale, matched-dimensionality evaluation of amplitude-encoding
-  (quantum-inspired) kernels and calibrated uncertainty quantification for
-  security anomaly detection, spanning two case studies: HYQAD (QKD
-  physical-layer telemetry) and Q-ZTNA (zero-trust network flows).
+  A matched-scale evaluation of the amplitude-encoding (quantum fidelity)
+  kernel for security anomaly detection on QKD physical-layer telemetry,
+  synthetic zero-trust network flows, UNSW-NB15 and CIC-IDS2017, including
+  zero-day generalization, its norm-invariance mechanism and a norm-anchored
+  fix, calibration, and certified robustness.
 authors:
   - family-names: Kapoor
     given-names: Arnav
     orcid: "https://orcid.org/0009-0007-9818-7908"
     affiliation: "Indian Institute of Science Education and Research (IISER) Bhopal"
-date-released: "2026-08-18"
-version: "0.2.0"
+date-released: "2026-10-13"
+version: "0.3.0"
 keywords:
   - quantum key distribution
   - zero-trust network architecture
   - anomaly detection
-  - uncertainty quantification
   - quantum machine learning
-  - kernel methods
+  - quantum kernels
+  - intrusion detection
+  - zero-day attacks
   - cybersecurity
-  - gaussian processes
 license: MIT
 repository-code: "https://github.com/arnavk23/quasar-security"
 preferred-citation:
+  type: article
+  title: "When Do Amplitude-Encoding Quantum Kernels Help Security Anomaly Detection? A Matched-Scale Study on QKD Telemetry and Network Intrusion Data"
+  authors:
+    - family-names: Kapoor
+      given-names: Arnav
+      orcid: "https://orcid.org/0009-0007-9818-7908"
+  year: 2026
+  status: preprint
+  notes: "Manuscript; code and data at the repository above."
+references:
   - type: article
-    title: "Calibrated Uncertainty Quantification for QKD Anomaly Detection"
+    title: "Calibrated and Kernel-Based Detection of QKD Implementation Attacks: A Controlled Simulation Study"
     authors:
       - family-names: Kapoor
         given-names: Arnav
-        orcid: "https://orcid.org/0009-0007-9818-7908"
     year: 2026
-    status: unpublished
-    notes: "Manuscript; code and data at the repository above."
+    status: preprint
   - type: article
     title: "Amplitude-Encoding Kernels for Zero-Trust Network Anomaly Detection"
     authors:
       - family-names: Kapoor
         given-names: Arnav
-        orcid: "https://orcid.org/0009-0007-9818-7908"
     year: 2026
-    status: unpublished
-    notes: "Manuscript; code and data at the repository above."
+    status: preprint

@@ -29,3 +29,25 @@ def kernel_target_alignment(K: np.ndarray, y: np.ndarray) -> float:
     num = np.sum(K * yy)
     den = np.sqrt(np.sum(K * K) * np.sum(yy * yy))
     return float(num / den) if den > 0 else 0.0
+
+
+class NormAnchor:
+    """Appends a constant coordinate c before amplitude encoding.
+
+    phi(x) = (x, c) / ||(x, c)|| keeps the input's norm (relative to c) and sign,
+    both of which plain amplitude encoding discards. c defaults to the median
+    training-set norm, so the transform has no tuned hyperparameter.
+    """
+
+    def __init__(self, c=None):
+        self.c = c
+
+    def fit(self, X, y=None):
+        self.c_ = float(np.median(np.linalg.norm(X, axis=1))) if self.c is None else float(self.c)
+        return self
+
+    def transform(self, X):
+        return np.hstack([X, np.full((len(X), 1), self.c_)])
+
+    def fit_transform(self, X, y=None):
+        return self.fit(X).transform(X)

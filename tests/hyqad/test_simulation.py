@@ -76,3 +76,33 @@ def test_train_val_test_split():
     )
     assert len(train) + len(val) + len(test) == 1000
     assert abs(train["label"].mean() - 0.3) <= 0.05
+
+
+def test_seeds_give_different_datasets():
+    from hyqad.simulation.data_generator import FEATURE_COLS
+    a = QKDDataGenerator(rng=np.random.default_rng(0)).generate(300, 0.3)
+    b = QKDDataGenerator(rng=np.random.default_rng(1)).generate(300, 0.3)
+    assert not np.allclose(np.sort(a["qber"].values), np.sort(b["qber"].values))
+    c = QKDDataGenerator(rng=np.random.default_rng(0)).generate(300, 0.3)
+    assert np.allclose(a[FEATURE_COLS].values, c[FEATURE_COLS].values)
+
+
+def test_time_does_not_leak_label():
+    df = QKDDataGenerator(rng=np.random.default_rng(0)).generate(4000, 0.3)
+    t0, t1 = df.loc[df.label == 0, "time"], df.loc[df.label == 1, "time"]
+    assert abs(t0.mean() - t1.mean()) < 0.05
+    assert t1.max() > 0.9
+
+
+def test_attack_strength_zero_is_indistinguishable():
+    from hyqad.simulation.data_generator import FEATURE_COLS
+    df = QKDDataGenerator(rng=np.random.default_rng(0), attack_strength=0.0).generate(2000, 0.3)
+    m0 = df.loc[df.label == 0, FEATURE_COLS].median()
+    m1 = df.loc[df.label == 1, FEATURE_COLS].median()
+    assert np.allclose(m0, m1, rtol=0.1)
+
+
+def test_gain_is_poisson():
+    sim = QKDChannelSimulator()
+    gain, _ = sim._gain_and_qber(np.array([0.5]), 0.9, sim.transmittance, 0.0, 0.01)
+    assert np.isclose(gain[0], (1 - np.exp(-0.9 * sim.transmittance * 0.5)) * 1.005)

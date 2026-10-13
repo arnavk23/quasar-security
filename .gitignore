@@ -41,3 +41,6 @@ htmlcov/
 
 # Generated figures / outputs (reproducible via scripts/)
 output/
+
+# Downloaded public datasets (UNSW-NB15, CIC-IDS2017) — fetched by scripts/fetch_datasets.sh
+data/external/

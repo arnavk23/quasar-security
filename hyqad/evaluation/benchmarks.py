@@ -32,20 +32,22 @@ class BenchmarkSuite:
         self.results: dict[str, DetectionMetrics] = {}
 
     def _convert_outlier_score(self, scores: np.ndarray, y_true: np.ndarray) -> np.ndarray:
+        # Classifier probabilities: column 1 is P(attack).
         if scores.ndim == 2 and scores.shape[1] == 2:
             return scores[:, 1]
-        if np.any(scores < 0):
-            scores = -scores
-        scores = (scores - scores.min()) / (scores.max() - scores.min() + 1e-12)
-        return scores
+        # Outlier detectors' decision_function is higher for *inliers*, so it is
+        # always negated to get an anomaly score (never sign-flipped on the data).
+        scores = -scores
+        return (scores - scores.min()) / (scores.max() - scores.min() + 1e-12)
 
     def run_baseline(
         self, name: str, model, X_train, y_train, X_test, y_test
     ) -> DetectionMetrics:
         start = time.perf_counter()
 
+        # Novelty detectors are fit on normal training samples only.
         if name == "LocalOutlierFactor":
-            model.fit(X_train)
+            model.fit(X_train[y_train == 0])
             y_pred = model.predict(X_test)
             y_pred = np.where(y_pred == 1, 0, 1)
             y_score = model.decision_function(X_test)
@@ -57,7 +59,7 @@ class BenchmarkSuite:
             y_score = model.decision_function(X_test)
             y_score = self._convert_outlier_score(y_score, y_test)
         elif name == "IsolationForest":
-            model.fit(X_train)
+            model.fit(X_train[y_train == 0])
             y_pred = model.predict(X_test)
             y_pred = np.where(y_pred == 1, 0, 1)
             y_score = model.decision_function(X_test)
