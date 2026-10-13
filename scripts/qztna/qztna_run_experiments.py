@@ -13,7 +13,7 @@ import pandas as pd
 from pathlib import Path
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.multiclass import OneVsRestClassifier
@@ -25,7 +25,7 @@ from xgboost import XGBClassifier
 
 from qztna.simulation import NetworkFlowGenerator
 from qztna.models.kernel_svm import fit_kernel_svm, NystromKernelSVM, KERNEL_FUNCS
-from qztna.features.amplitude_kernel import kernel_target_alignment
+from qztna.features.amplitude_kernel import NormAnchor, kernel_target_alignment
 from qztna.certification.randomized_smoothing import certify_dataset
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -75,10 +75,13 @@ def run_detection_benchmark():
     for seed in range(N_SEEDS_MAIN):
         Xtr, Xte, ytr, yte, atr, ate, _ = make_split(gen, n_samples=8000, attack_ratio=0.2, seed=seed)
 
-        for kname, label in [("ae", "AE-SVM"), ("rbf", "RBF-SVM"), ("laplacian", "Laplacian-SVM"), ("poly", "Poly-SVM")]:
-            model, fit_t = fit_kernel_svm(kname, Xtr, ytr, C=1.0, random_state=seed, nystrom_threshold=1500)
-            ypred = model.predict(Xte)
-            yscore = model.predict_proba(Xte)[:, 1]
+        na = NormAnchor().fit(Xtr)
+        for kname, label in [("ae", "AE-SVM"), ("rbf", "RBF-SVM"), ("laplacian", "Laplacian-SVM"),
+                             ("poly", "Poly-SVM"), ("ae", "AE-SVM (anchored)")]:
+            Xa, Xb = (na.transform(Xtr), na.transform(Xte)) if label.endswith("(anchored)") else (Xtr, Xte)
+            model, fit_t = fit_kernel_svm(kname, Xa, ytr, C=1.0, random_state=seed, nystrom_threshold=1500)
+            ypred = model.predict(Xb)
+            yscore = model.predict_proba(Xb)[:, 1]
             rows.append(dict(model=label, seed=seed, accuracy=accuracy_score(yte, ypred),
                               f1=f1_score(yte, ypred), auc=roc_auc_score(yte, yscore),
                               precision=precision_score(yte, ypred, zero_division=0),
@@ -197,9 +200,19 @@ def run_zeroday():
             Xte, yte = sc.transform(df_test[cols].values), df_test["label"].values
             if len(np.unique(yte)) < 2:
                 continue
-            for kname, label in [("ae", "AE-SVM"), ("rbf", "RBF-SVM")]:
-                model, _ = fit_kernel_svm(kname, Xtr, ytr, C=1.0, random_state=seed, nystrom_threshold=1500)
-                yscore = model.predict_proba(Xte)[:, 1]
+            # "nonneg": min-max scaled to [0, 1] so the squared-cosine kernel's
+            # x -> -x ambiguity cannot arise (mechanism control for the AE-SVM gap)
+            # "anchor": phi(x) = (x, c)/||(x, c)|| with c = median training norm keeps the
+            # norm and sign information plain amplitude encoding discards
+            mm = MinMaxScaler(clip=True).fit(Xtr)
+            na = NormAnchor().fit(Xtr)
+            views = {"std": (Xtr, Xte), "mm": (mm.transform(Xtr), mm.transform(Xte)),
+                     "anchor": (na.transform(Xtr), na.transform(Xte))}
+            for kname, label, space in [("ae", "AE-SVM", "std"), ("rbf", "RBF-SVM", "std"),
+                                        ("ae", "AE-SVM (nonneg)", "mm"), ("ae", "AE-SVM (anchored)", "anchor")]:
+                Xa, Xb = views[space]
+                model, _ = fit_kernel_svm(kname, Xa, ytr, C=1.0, random_state=seed, nystrom_threshold=1500)
+                yscore = model.predict_proba(Xb)[:, 1]
                 rows.append(dict(model=label, held_out=held_out, seed=seed,
                                   auc=roc_auc_score(yte, yscore)))
         print(f"  seed {seed} done")
@@ -348,15 +361,15 @@ def run_multiclass_and_uncertainty():
     pd.DataFrame(unc_rows).to_csv(DATA / "qztna_uncertainty.csv", index=False)
 
 
+EXPERIMENTS = dict(detection=run_detection_benchmark, matched_n=run_matched_n,
+                   certified=run_certified_robustness, sensitivity=run_sensitivity,
+                   zeroday=run_zeroday, alignment=run_kernel_alignment,
+                   dimensionality=run_dimensionality, latency=run_latency,
+                   multiclass=run_multiclass_and_uncertainty)
+
 if __name__ == "__main__":
+    import sys
     t0 = time.time()
-    run_detection_benchmark()
-    run_matched_n()
-    run_certified_robustness()
-    run_sensitivity()
-    run_zeroday()
-    run_kernel_alignment()
-    run_dimensionality()
-    run_latency()
-    run_multiclass_and_uncertainty()
+    for name in sys.argv[1:] or EXPERIMENTS:
+        EXPERIMENTS[name]()
     print(f"All experiments done in {time.time() - t0:.1f}s")
