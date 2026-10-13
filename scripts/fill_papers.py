@@ -406,6 +406,113 @@ def fill_combined_tables(d):
     return out
 
 
+QMI_DOMAINS = ["QKD", "QKD, centred Mahal.", "QKD, no Mahal.", "Synthetic flows", "UNSW-NB15", "CIC-IDS2017"]
+QMI_MODELS = ["AE", "AE-anchored", "ZZ", "RBF", "Laplacian"]
+
+
+def fill_qmi_tables():
+    """Tables for papers/qmi/qmi.template.tex from data/qmi/qmi_kernels.csv (no semicolons in output)."""
+    f = ROOT / "data" / "qmi" / "qmi_kernels.csv"
+    if not f.exists():
+        return {}
+    df = pd.read_csv(f)
+    ex = df[df.shots == 0]
+    g = ex.groupby(["domain", "model"])[["auc_indist", "auc_heldout"]].mean()
+    out = {}
+    for col, key in (("auc_indist", "QMI_T_ZZ_IN"), ("auc_heldout", "QMI_T_ZZ_HELD")):
+        rows = []
+        for d in QMI_DOMAINS:
+            best = max(g.loc[(d, m), col] for m in QMI_MODELS)
+            cells = []
+            for m in QMI_MODELS:
+                per_seed = ex[(ex.domain == d) & (ex.model == m)].groupby("seed")[col].mean()
+                v = g.loc[(d, m), col]
+                body = f"{v:.3f}{{\\scriptstyle\\pm{ci95(per_seed):.3f}}}"
+                cells.append(f"$\\mathbf{{{body}}}$" if abs(v - best) < 5e-4 else f"${body}$")
+            rows.append(f"    {d} & " + " & ".join(cells) + r" \\")
+        out[key] = "\n".join(rows)
+
+    rows = []
+    for d in QMI_DOMAINS:
+        zz = ex[(ex.domain == d) & (ex.model == "ZZ")]
+        z1 = ex[(ex.domain == d) & (ex.model == "ZZ (beta=1)")]
+        rows.append(f"    {d} & ${zz.beta.median():g}$ & ${zz.k_mean.mean():.3f}\\pm{zz.k_std.mean():.3f}$ & "
+                    f"${z1.k_mean.mean():.3f}\\pm{z1.k_std.mean():.3f}$ \\\\")
+    out["QMI_T_CONC"] = "\n".join(rows)
+
+    key = ["domain", "seed", "held_out", "model"]
+    base = ex.set_index(key)[["auc_indist", "auc_heldout"]]
+    rows = []
+    for m in ("AE-anchored", "ZZ"):
+        for col, lab in (("auc_indist", "In-distribution"), ("auc_heldout", "Held-out")):
+            cells = []
+            for s in (100, 1000, 10000):
+                sub = df[(df.model == m) & (df.shots == s)].set_index(key)[col]
+                cells.append(f"${(sub - base.loc[sub.index, col]).mean():+.3f}$")
+            rows.append(f"    {m if col == 'auc_indist' else ''} & {lab} & " + " & ".join(cells) + r" \\")
+    out["QMI_T_SHOTS"] = "\n".join(rows)
+
+    # prose for the ZZ, concentration and shot sections
+    H = lambda d, m: g.loc[(d, m), "auc_heldout"]
+    held_best = {d: max(QMI_MODELS, key=lambda m: H(d, m)) for d in QMI_DOMAINS}
+    n_lap = sum(v == "Laplacian" for v in held_best.values())
+    zz_best = sum(v == "ZZ" for v in held_best.values())
+    words = {0: "none", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
+    out["QMI_ABS_ZZ"] = ("An eight-qubit ZZ feature map with tuned bandwidth is competitive with tuned classical "
+                         + ("kernels but is not the best on held-out attacks in any of six settings." if zz_best == 0
+                            else f"kernels and is the best on held-out attacks in {words[zz_best]} of six settings."))
+    d1000 = {}
+    for m in ("AE-anchored", "ZZ"):
+        sub = df[(df.model == m) & (df.shots == 1000)].set_index(key)
+        d1000[m] = (sub[["auc_indist", "auc_heldout"]] - base.loc[sub.index]).groupby("domain").mean()
+    worst1000 = -min(v.min().min() for v in d1000.values())
+    out["QMI_ABS_SHOTS"] = (f"Estimating every kernel entry from 1000 shots lowers mean AUC by at most "
+                            f"{worst1000:.3f} in any setting.")
+    out["QMI_ZZ_TEXT"] = (
+        "Table~\\ref{tab:zz} and Fig.~\\ref{fig:zz} compare five kernels on the same eight inputs. The ZZ map "
+        "is not norm invariant. It does not share the failure of plain AE on synthetic flows "
+        f"(held-out AUC {H('Synthetic flows', 'ZZ'):.3f} against {H('Synthetic flows', 'AE'):.3f}). It is close "
+        "to the classical kernels everywhere. But it is not the best kernel on held-out attacks in any of the six "
+        f"settings. The tuned Laplacian kernel is best in {words[n_lap]} of them.\n\n"
+        "Reducing to eight inputs changes some results from the full-dimensional study. Held-out AUC on synthetic "
+        "flows falls for every kernel. On the public data the anchor now lowers held-out AUC, by "
+        f"{H('UNSW-NB15', 'AE') - H('UNSW-NB15', 'AE-anchored'):.3f} on UNSW-NB15 and "
+        f"{H('CIC-IDS2017', 'AE') - H('CIC-IDS2017', 'AE-anchored'):.3f} on CIC-IDS2017. So the anchor is not "
+        "free. It helps when the norm carries the signal and can hurt when it does not.\n\n"
+        "The centred QKD setting isolates the sign ambiguity. Standardizing the Mahalanobis column makes it "
+        "signed. A block far from normal and a block unusually close to normal then differ mainly in sign, which "
+        f"$K_A$ cannot see. Plain AE falls from {H('QKD', 'AE'):.3f} to {H('QKD, centred Mahal.', 'AE'):.3f}. "
+        f"The anchor restores {H('QKD, centred Mahal.', 'AE-anchored'):.3f}.\n\n"
+        "Tuning the classical baseline mattered as much as the encoding. In a first run the RBF width grid "
+        "stopped at $\\gamma=3/q$. On CIC-IDS2017 the ZZ map then appeared to beat RBF by 0.20 in held-out AUC "
+        "(0.874 against 0.672). Extending the grid to $10/q$ raised RBF to "
+        f"{H('CIC-IDS2017', 'RBF'):.3f} and the Laplacian kernel reached {H('CIC-IDS2017', 'Laplacian'):.3f}. "
+        "The selected classical widths on both public datasets still sit at the top of the extended grid. "
+        "Wider grids might change the classical numbers again. We report the grid as run.")
+    zz = ex[ex.model == "ZZ"]
+    z1 = ex[ex.model == "ZZ (beta=1)"].groupby("domain").k_mean.mean()
+    out["QMI_CONC_TEXT"] = (
+        "Bandwidth matters for the ZZ map as theory predicts (Table~\\ref{tab:conc}). At $\\beta=1$ the "
+        f"off-diagonal entries average {z1.min():.3f} to {z1.max():.3f}, close to the fully concentrated value "
+        f"$2^{{-8}}$. Cross-validation picks $\\beta$ between {zz.beta.min():g} and {zz.beta.max():g}. There the "
+        "entries spread out and the kernel can learn. This matches the concentration and bandwidth results of "
+        "earlier work~\\cite{thanasilp2024exponential,shaydulin2022importance,canatar2022bandwidth}.")
+    d100 = {}
+    for m in ("AE-anchored", "ZZ"):
+        sub = df[(df.model == m) & (df.shots == 100)].set_index(key)
+        d100[m] = (sub[["auc_indist", "auc_heldout"]] - base.loc[sub.index]).groupby("domain").mean()
+    zz100 = d100["ZZ"].min().min()
+    zz100_dom = d100["ZZ"].min(axis=1).idxmin()
+    out["QMI_SHOTS_TEXT"] = (
+        "Shot noise costs little accuracy at the sample size we use (Table~\\ref{tab:shots}). With 1000 shots "
+        f"per entry, the worst setting loses {worst1000:.3f} AUC for either kernel. With 100 shots the ZZ kernel "
+        f"loses up to {-zz100:.3f} on {zz100_dom.replace('QKD, ', 'QKD data, ')}. The anchored amplitude kernel "
+        f"loses at most {-d100['AE-anchored'].min().min():.3f}. The real cost is the number of circuit runs. "
+        "A training Gram matrix on 1000 samples at 1000 shots per entry needs about $5\\times10^8$ executions, "
+        "before any test point is scored. The closed form of Proposition~\\ref{prop:exact} needs none.")
+    return out
+
+
 def real_rows(d):
     real = d["real"]
     if real is None:
@@ -444,12 +551,14 @@ if __name__ == "__main__":
     vals.update(fill_qztna(d))
     vals.update(fill_hyqad(d))
     vals.update(fill_combined_tables(d))
+    vals.update(fill_qmi_tables())
     rr = real_rows(d)
     if rr is not None:
         vals["REAL_ROWS"] = rr
     for tpl, out in ((ROOT / "papers/combined/quasar.template.tex", ROOT / "papers/combined/quasar.tex"),
                      (ROOT / "papers/qztna/qcyber.template.tex", ROOT / "papers/qztna/qcyber.tex"),
-                     (ROOT / "papers/hyqad/paper.template.tex", ROOT / "papers/hyqad/paper.tex")):
+                     (ROOT / "papers/hyqad/paper.template.tex", ROOT / "papers/hyqad/paper.tex"),
+                     (ROOT / "papers/qmi/qmi.template.tex", ROOT / "papers/qmi/qmi.tex")):
         if tpl.exists():
             out.write_text(tpl.read_text())
             substitute(out, vals)
