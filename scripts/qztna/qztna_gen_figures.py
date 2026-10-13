@@ -435,17 +435,15 @@ def fig15_landmarks():
 
 
 if __name__ == '__main__':
-    fig1_framework()
+    # fig1, fig8 and fig11 are drawn by gen_real_figures.py
     fig2_detection_performance()
     fig3_matched_n()
     fig4_certified_radii()
     fig5_sensitivity()
     fig6_zeroday()
     fig7_latency()
-    fig8_confusion()
     fig9_roc()
     fig10_dimensionality()
-    fig11_uncertainty()
     fig12_perturbation()
     fig13_kernel_alignment()
     fig14_feature_space()

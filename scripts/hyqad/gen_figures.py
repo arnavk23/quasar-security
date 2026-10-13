@@ -243,7 +243,8 @@ def fig_crossover():
         ax.set_title(title)
         ax.set_xlabel("Training samples n")
     axes[0].set_ylabel("Test accuracy")
-    axes[0].legend(loc="lower right")
+    h, l = axes[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", bbox_to_anchor=(0.5, 0.98), ncol=4)
     save(fig, "fig8_kernel_crossover.png")
 
 

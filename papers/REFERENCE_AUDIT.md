@@ -1,6 +1,6 @@
 # Reference audit (2026-10-13)
 
-Every reference in `papers/hyqad/paper.tex` and `papers/qztna/qcyber.tex` was
+Every reference in the two conference drafts (since removed from the repository) was
 checked. Classic, widely cited works were verified from their standard
 bibliographic records; anything uncertain was checked by web search. Entries
 that could not be found as cited were **removed or replaced** — a fabricated
@@ -66,3 +66,19 @@ LISA 1999), the Forrester report, and the two companion manuscripts.
 Bennett & Brassard (1984) cites its 2014 reprint in *Theor. Comput. Sci.*.
 Ferreira da Silva et al. is now cited from *Opt. Express* 20(17), 18911 (2012),
 not arXiv.
+
+## Added for the Quantum Machine Intelligence version (2026-10-14)
+
+Twelve references were added. Each was checked against Crossref or the arXiv API
+for title, authors, venue, volume, pages and year.
+
+- Crossref, DOI verified: Thanasilp et al., *Nat. Commun.* 15, 5200 (2024);
+  Shaydulin & Wild, *Phys. Rev. A* 106, 042407 (2022); LaRose & Coyle, *Phys. Rev. A*
+  102, 032420 (2020); Schuld, Sweke & Meyer, *Phys. Rev. A* 103, 032430 (2021);
+  Möttönen et al., *Quantum Inf. Comput.* 5(6), 467 (2005); Wang et al., *Quantum* 5,
+  531 (2021); Hubregtsen et al., *Phys. Rev. A* 106, 042431 (2022); Tang, STOC 2019,
+  217-228.
+- arXiv, no DOI: Schuld, arXiv:2101.11020; Bowles, Ahmed & Schuld, arXiv:2403.07059;
+  Canatar et al., arXiv:2206.06686.
+- NeurIPS, no DOI: Kübler, Buchholz & Schölkopf, NeurIPS 34 (2021), confirmed via the
+  arXiv journal reference of 2106.03747.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Experiment driver for the HYQAD paper (papers/hyqad/paper.tex).
+Experiment driver for the QKD telemetry results in papers/qmi/qmi.tex.
 
 Every table and figure in the paper is produced from the CSVs this script
 writes to data/hyqad/; scripts/hyqad/gen_figures.py reads only those CSVs.

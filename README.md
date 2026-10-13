@@ -23,11 +23,10 @@ Every compared model is trained on the same subsample at every training size, ov
 
 | Paper | Source | Notes |
 |---|---|---|
-| *When Do Amplitude-Encoding Quantum Kernels Help Security Anomaly Detection?* (merged journal version) | [`papers/combined/quasar.tex`](papers/combined/quasar.tex) | Both domains, public datasets, mechanism and fix |
-| *Calibrated and Kernel-Based Detection of QKD Implementation Attacks: A Controlled Simulation Study* | [`papers/hyqad/paper.tex`](papers/hyqad/paper.tex) | Conference version |
-| *Amplitude-Encoding Kernels for Zero-Trust Network Anomaly Detection* | [`papers/qztna/qcyber.tex`](papers/qztna/qcyber.tex) | Conference version |
+| *The Norm Blind Spot of Amplitude-Encoding Quantum Kernels in Anomaly Detection* (Quantum Machine Intelligence version) | [`papers/qmi/qmi.tex`](papers/qmi/qmi.tex) | Merged paper reframed for a quantum-ML journal: Rayleigh-quotient analysis, anchor theory, ZZ feature map, finite shots |
+| *When Do Amplitude-Encoding Quantum Kernels Help Security Anomaly Detection?* (earlier IEEE-format draft) | [`papers/combined/quasar.tex`](papers/combined/quasar.tex) | Superseded by the QMI version |
 
-All three cite [`papers/references.bib`](papers/references.bib); every entry was checked, see [`papers/REFERENCE_AUDIT.md`](papers/REFERENCE_AUDIT.md).
+Both cite [`papers/references.bib`](papers/references.bib); every entry was checked, see [`papers/REFERENCE_AUDIT.md`](papers/REFERENCE_AUDIT.md).
 
 ## Installation
 
@@ -50,8 +49,11 @@ Run from the repository root with `PYTHONPATH=.`. Set `OMP_NUM_THREADS=1`; paral
 | Q-ZTNA public datasets | `scripts/qztna/run_real_data.py [name ...]` | `data/qztna/real_*.csv` |
 | Q-ZTNA figures | `scripts/qztna/qztna_gen_figures.py`, `scripts/qztna/gen_real_figures.py` | `figures/qztna/*.png` |
 | Cross-domain figures | `scripts/combined_figures.py` | `figures/combined/*.png` |
+| ZZ feature map and finite shots | `scripts/qmi_experiments.py [qkd synthetic real]` | `data/qmi/qmi_kernels.csv` |
+| QMI figures | `scripts/qmi_figures.py` | `figures/qmi/*.png` |
 | Norm-vs-direction diagnostic | `scripts/norm_diagnostic.py` | `data/norm_diagnostic.csv` |
 | Fill paper numbers | `scripts/fill_papers.py` | `papers/*/…tex` from `*.template.tex` |
+| Paper style check | `scripts/style_check.py papers/*/*.tex` | semicolons, dashes, colons, long sentences |
 | Paper tables | `scripts/make_tables.py` | LaTeX rows printed from the CSVs |
 
 `scripts/hyqad/demo.py` runs a short end-to-end HYQAD example. Run tests with `python -m pytest`.
