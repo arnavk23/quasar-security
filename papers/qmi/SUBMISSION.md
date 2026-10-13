@@ -26,7 +26,7 @@ All are in `papers/qmi/`.
 |---|---|
 | Manuscript (LaTeX source) | `qmi_submission.zip`, or the files inside `submission/` one by one |
 | Manuscript PDF, if asked | `submission/main.pdf` |
-| Cover letter | paste `cover_letter.md` into the text box, or upload it as a file |
+| Cover letter | `cover_letter.pdf` (text in `cover_letter.md`) |
 
 The ZIP holds `main.tex`, `main.bbl`, `references.bib`, `sn-jnl.cls`,
 `sn-mathphys-num.bst` and seven PNG figures. It compiles on its own with pdfLaTeX.
