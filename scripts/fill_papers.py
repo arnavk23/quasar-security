@@ -17,7 +17,6 @@ from scipy.stats import ttest_rel
 
 ROOT = Path(__file__).resolve().parents[1]
 HY, QZ = ROOT / "data" / "hyqad", ROOT / "data" / "qztna"
-SCRATCH_SECTIONS = ROOT / "papers" / "combined" / "sections"
 
 
 def ci95(x):
@@ -367,7 +366,7 @@ def fill_hyqad(d):
 
 
 def fill_combined_tables(d):
-    """Cross-domain tables for papers/combined/quasar.template.tex (no semicolons in output)."""
+    """Cross-domain tables for qmi/qmi.template.tex (no semicolons in output)."""
     out = {}
     hz, sz, rz = d["hyz"], d["synz"], d["realz"]
     ab = pd.read_csv(HY / "zeroday_mahal_ablation.csv")
@@ -411,7 +410,7 @@ QMI_MODELS = ["AE", "AE-anchored", "ZZ", "RBF", "Laplacian"]
 
 
 def fill_qmi_tables():
-    """Tables for papers/qmi/qmi.template.tex from data/qmi/qmi_kernels.csv (no semicolons in output)."""
+    """Tables for qmi/qmi.template.tex from data/qmi/qmi_kernels.csv (no semicolons in output)."""
     f = ROOT / "data" / "qmi" / "qmi_kernels.csv"
     if not f.exists():
         return {}
@@ -554,8 +553,7 @@ if __name__ == "__main__":
     rr = real_rows(d)
     if rr is not None:
         vals["REAL_ROWS"] = rr
-    for tpl, out in ((ROOT / "papers/combined/quasar.template.tex", ROOT / "papers/combined/quasar.tex"),
-                     (ROOT / "papers/qmi/qmi.template.tex", ROOT / "papers/qmi/qmi.tex")):
+    for tpl, out in ((ROOT / "qmi/qmi.template.tex", ROOT / "qmi/qmi.tex"),):
         if tpl.exists():
             out.write_text(tpl.read_text())
             substitute(out, vals)

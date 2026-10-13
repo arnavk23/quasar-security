@@ -1,4 +1,4 @@
-`qmi_kernels.csv` is written by `scripts/qmi_experiments.py` and feeds `papers/qmi/qmi.tex`.
+`qmi_kernels.csv` is written by `scripts/qmi_experiments.py` and feeds `qmi/qmi.tex`.
 
 `qmi_kernels_narrow_grid.csv` is the first run, kept for provenance. It used an RBF width grid of
 {0.1, 0.3, 1, 3}/q and no Laplacian kernel. Its "QKD" rows re-standardized the Mahalanobis column,

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Cross-domain figures for papers/combined/quasar.tex. Reads data/hyqad/*.csv and
+Cross-domain figures for qmi/qmi.tex. Reads data/hyqad/*.csv and
 data/qztna/*.csv only.
 """
 from pathlib import Path

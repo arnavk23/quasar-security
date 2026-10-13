@@ -56,7 +56,7 @@ Slay MilCIS 2015.
 
 ## DOIs
 
-All 46 DOIs in `papers/references.bib` were checked against Crossref on
+All 46 DOIs in `qmi/references.bib` were checked against Crossref on
 2026-10-13. Each resolves, and its registered title matches the cited title
 (the XGBoost record stores the title without its subtitle). The 12 entries
 without a DOI have none registered: the NeurIPS, ICML and ICLR proceedings

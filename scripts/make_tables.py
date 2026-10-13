@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Prints the LaTeX table bodies and headline numbers used in papers/*/ from the
+Prints the LaTeX table bodies and headline numbers used in qmi/qmi.tex from the
 result CSVs, so no number in a paper is typed by hand.
 
     python scripts/make_tables.py            # everything

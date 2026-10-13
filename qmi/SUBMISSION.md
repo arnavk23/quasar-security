@@ -20,7 +20,7 @@ Everything below is ready to paste. Rebuild the package after any edit with
 
 ## Files
 
-All are in `papers/qmi/`.
+All are in `qmi/`.
 
 | Upload as | File |
 |---|---|
@@ -39,11 +39,11 @@ supplementary" or "Other".
 1. Go to https://link.springer.com/journal/42484 and click **Submit manuscript**. Log in
    or create an account with your IISER email. Add ORCID 0009-0007-9818-7908 to your
    profile.
-2. **Manuscript file.** Click **Upload manuscript** and choose `papers/qmi/qmi_submission.zip`.
+2. **Manuscript file.** Click **Upload manuscript** and choose `qmi/qmi_submission.zip`.
    Snapp compiles the LaTeX into a PDF itself. Do not fill any field before this upload.
    Snapp reads the title, abstract, author and statements from the file.
 3. **Figures and tables.** Skip. They are inside the ZIP. Separate high-resolution files
-   are only needed after acceptance. They are in `papers/qmi/submission/` (all at least
+   are only needed after acceptance. They are in `qmi/submission/` (all at least
    1500 x 1200 pixels).
 4. **Supplementary material.** Skip. The code and data are on GitHub.
 5. **Related files.** Skip. No overlapping paper is under consideration.

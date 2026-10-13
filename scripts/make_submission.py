@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Builds the flat upload package for papers/qmi/qmi.tex:
+Builds the flat upload package for qmi/qmi.tex:
 
-    papers/qmi/submission/   main.tex, figures, sn-jnl.cls, sn-mathphys-num.bst,
+    qmi/submission/   main.tex, figures, sn-jnl.cls, sn-mathphys-num.bst,
                              references.bib, main.bbl, main.pdf
-    papers/qmi/qmi_submission.zip
+    qmi/qmi_submission.zip
 
 Run python scripts/fill_papers.py first. Figure paths are flattened, so the
 package compiles on its own, which is what the journal's system needs.
@@ -16,7 +16,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "papers" / "qmi"
+SRC = ROOT / "qmi"
 OUT = SRC / "submission"
 
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     (OUT / "main.tex").write_text(tex)
     for f in ("sn-jnl.cls", "sn-mathphys-num.bst"):
         shutil.copy(SRC / f, OUT / f)
-    shutil.copy(ROOT / "papers" / "references.bib", OUT / "references.bib")
+    shutil.copy(SRC / "references.bib", OUT / "references.bib")
 
     run("pdflatex", "-interaction=nonstopmode", "main.tex")
     run("bibtex", "main")

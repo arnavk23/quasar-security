@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Figures for papers/qmi/qmi.tex (the Quantum Machine Intelligence version).
+Figures for qmi/qmi.tex (the Quantum Machine Intelligence version).
 fig_geometry needs no data. fig_feature_maps reads data/qmi/qmi_kernels.csv.
 """
 from pathlib import Path

@@ -6,7 +6,7 @@
 \usepackage{booktabs}
 \usepackage{xcolor}
 
-\graphicspath{{../../figures/}}
+\graphicspath{{../figures/}}
 \renewcommand{\arraystretch}{1.12}
 \theoremstyle{thmstyleone}
 \newtheorem{proposition}{Proposition}
@@ -34,7 +34,7 @@ attacks differ from normal traffic mainly in norm. Appending one constant
 amplitude, set to the median training norm, repairs the failure. We explain why
 this constant works. Where the norm carries no signal, the anchor can cost
 accuracy. On UNSW-NB15 and CIC-IDS2017 the plain kernel does not fail.
-@QMI_ABS_ZZ@ @QMI_ABS_SHOTS@ A simple norm statistic does not predict when the
+An eight-qubit ZZ feature map with tuned bandwidth is competitive with tuned classical kernels but is not the best on held-out attacks in any of six settings. Estimating every kernel entry from 1000 shots barely changes detection performance. A simple norm statistic does not predict when the
 failure occurs. Quantum kernels should be checked for their invariances and tested
 on held-out classes from real data, against classical kernels trained at the same
 scale.}
@@ -371,7 +371,19 @@ and data preparation are public (see Declarations).
     \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
     Model & MCC & AUC & Accuracy & AUC & F1 & AUC & F1 & AUC \\
     \midrule
-@INDIST_ROWS@
+    AE-SVM & $.814{\scriptstyle\pm.023}$ & $\mathbf{.970{\scriptstyle\pm.005}}$ & $.947{\scriptstyle\pm.002}$ & $.966{\scriptstyle\pm.003}$ & $.887{\scriptstyle\pm.003}$ & $.973{\scriptstyle\pm.001}$ & $.979{\scriptstyle\pm.001}$ & $.999{\scriptstyle\pm.000}$ \\
+    AE-SVM (anchored) & $.816{\scriptstyle\pm.019}$ & $.965{\scriptstyle\pm.007}$ & $.960{\scriptstyle\pm.003}$ & $.983{\scriptstyle\pm.002}$ & $.884{\scriptstyle\pm.003}$ & $.972{\scriptstyle\pm.001}$ & $.977{\scriptstyle\pm.001}$ & $.998{\scriptstyle\pm.000}$ \\
+    RBF-SVM & $.810{\scriptstyle\pm.015}$ & $.957{\scriptstyle\pm.007}$ & $.948{\scriptstyle\pm.003}$ & $.976{\scriptstyle\pm.003}$ & $.887{\scriptstyle\pm.003}$ & $.973{\scriptstyle\pm.001}$ & $.983{\scriptstyle\pm.001}$ & $.999{\scriptstyle\pm.000}$ \\
+    Laplacian-SVM & -- & -- & $.946{\scriptstyle\pm.003}$ & $.976{\scriptstyle\pm.002}$ & $.899{\scriptstyle\pm.004}$ & $.978{\scriptstyle\pm.001}$ & $.987{\scriptstyle\pm.001}$ & $\mathbf{.999{\scriptstyle\pm.000}}$ \\
+    Poly-SVM & -- & -- & $.959{\scriptstyle\pm.003}$ & $.979{\scriptstyle\pm.003}$ & $.889{\scriptstyle\pm.003}$ & $.975{\scriptstyle\pm.001}$ & $.989{\scriptstyle\pm.001}$ & $.999{\scriptstyle\pm.000}$ \\
+    GP & $.801{\scriptstyle\pm.016}$ & $.956{\scriptstyle\pm.007}$ & -- & -- & -- & -- & -- & -- \\
+    Hybrid & $.833{\scriptstyle\pm.016}$ & $.969{\scriptstyle\pm.006}$ & -- & -- & -- & -- & -- & -- \\
+    RF & $.834{\scriptstyle\pm.013}$ & $.969{\scriptstyle\pm.006}$ & $.943{\scriptstyle\pm.003}$ & $.976{\scriptstyle\pm.002}$ & $.889{\scriptstyle\pm.003}$ & $.980{\scriptstyle\pm.001}$ & $.990{\scriptstyle\pm.002}$ & $\mathbf{.999{\scriptstyle\pm.000}}$ \\
+    RF-isotonic & $\mathbf{.837{\scriptstyle\pm.013}}$ & $.967{\scriptstyle\pm.006}$ & -- & -- & -- & -- & -- & -- \\
+    XGBoost & -- & -- & $.962{\scriptstyle\pm.003}$ & $\mathbf{.985{\scriptstyle\pm.002}}$ & $.892{\scriptstyle\pm.003}$ & $\mathbf{.981{\scriptstyle\pm.001}}$ & $\mathbf{.994{\scriptstyle\pm.001}}$ & $\mathbf{1.000{\scriptstyle\pm.000}}$ \\
+    MLP & -- & -- & $\mathbf{.965{\scriptstyle\pm.001}}$ & $.984{\scriptstyle\pm.002}$ & $.889{\scriptstyle\pm.004}$ & $.975{\scriptstyle\pm.001}$ & $.991{\scriptstyle\pm.001}$ & $\mathbf{.999{\scriptstyle\pm.000}}$ \\
+    DNN & -- & -- & -- & -- & $\mathbf{.909{\scriptstyle\pm.006}}$ & $.977{\scriptstyle\pm.002}$ & $.989{\scriptstyle\pm.002}$ & $\mathbf{.999{\scriptstyle\pm.000}}$ \\
+    Autoencoder & -- & -- & -- & -- & $.394{\scriptstyle\pm.187}$ & $.887{\scriptstyle\pm.009}$ & $.546{\scriptstyle\pm.058}$ & $.948{\scriptstyle\pm.012}$ \\
     \bottomrule
   \end{tabular}
 \end{sidewaystable}
@@ -398,7 +410,8 @@ no width to tune.
     \toprule
     Kernel & QKD & Synthetic & UNSW-NB15 & CIC-IDS2017 \\
     \midrule
-@CB_T_ALIGN@
+    AE & $0.17$ & $0.13$ & $0.38$ & $0.62$ \\
+    RBF & $0.48$ & $0.21$ & $0.52$ & $0.67$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -448,7 +461,15 @@ Corollary~\ref{cor:inv} requires.
     \toprule
     Model & QKD & QKD, no Mahal. & Synthetic & UNSW-NB15 & CIC-IDS2017 \\
     \midrule
-@CB_T_ZD@
+    AE-SVM & $0.952$ & $0.554$ & $0.526$ & $0.945$ & $0.715$ \\
+    AE-SVM (nonneg) & -- & -- & $0.593$ & $0.935$ & $0.663$ \\
+    AE-SVM (anchored) & $0.949$ & $0.939$ & $0.793$ & $0.940$ & $0.733$ \\
+    RBF-SVM & $0.917$ & $\mathbf{0.940}$ & $\mathbf{0.839}$ & $0.932$ & $0.658$ \\
+    GP & $0.941$ & -- & -- & -- & -- \\
+    RF & $\mathbf{0.960}$ & -- & -- & $0.949$ & $0.820$ \\
+    XGBoost & -- & -- & -- & $0.960$ & $0.852$ \\
+    DNN & -- & -- & -- & $\mathbf{0.963}$ & $0.694$ \\
+    Autoencoder & -- & -- & -- & $0.860$ & $\mathbf{0.874}$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -502,7 +523,9 @@ synthetic flows (0.793) and all of it on QKD data without the Mahalanobis featur
   \setlength{\tabcolsep}{4pt}
   \begin{tabular}{lcccccccc}
     \toprule
-@QZ_T_SWEEP@
+    $c$ & 0 & 1 & 2 & 4 & 8 & 16 & 32 & median \\
+    \midrule
+    AUC & $0.526$ & $0.549$ & $0.691$ & $0.809$ & $0.771$ & $0.650$ & $0.521$ & $0.793$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -528,10 +551,20 @@ without seeing held-out attacks.
     Domain & AE & AE (anchored) & ZZ & RBF & Laplacian \\
     \midrule
     \multicolumn{6}{l}{\emph{AUC on unseen samples of known attack types}} \\
-@QMI_T_ZZ_IN@
+    QKD & $\mathbf{0.974{\scriptstyle\pm0.002}}$ & $0.968{\scriptstyle\pm0.004}$ & $0.958{\scriptstyle\pm0.005}$ & $0.964{\scriptstyle\pm0.006}$ & $0.969{\scriptstyle\pm0.003}$ \\
+    QKD, centred Mahal. & $0.741{\scriptstyle\pm0.008}$ & $\mathbf{0.972{\scriptstyle\pm0.003}}$ & $0.959{\scriptstyle\pm0.004}$ & $\mathbf{0.972{\scriptstyle\pm0.003}}$ & $0.970{\scriptstyle\pm0.003}$ \\
+    QKD, no Mahal. & $0.730{\scriptstyle\pm0.012}$ & $\mathbf{0.970{\scriptstyle\pm0.003}}$ & $0.950{\scriptstyle\pm0.003}$ & $0.969{\scriptstyle\pm0.002}$ & $0.968{\scriptstyle\pm0.004}$ \\
+    Synthetic flows & $0.949{\scriptstyle\pm0.006}$ & $\mathbf{0.989{\scriptstyle\pm0.004}}$ & $0.983{\scriptstyle\pm0.003}$ & $0.988{\scriptstyle\pm0.004}$ & $\mathbf{0.989{\scriptstyle\pm0.003}}$ \\
+    UNSW-NB15 & $0.946{\scriptstyle\pm0.002}$ & $0.932{\scriptstyle\pm0.006}$ & $0.954{\scriptstyle\pm0.001}$ & $0.955{\scriptstyle\pm0.004}$ & $\mathbf{0.964{\scriptstyle\pm0.003}}$ \\
+    CIC-IDS2017 & $0.976{\scriptstyle\pm0.004}$ & $0.969{\scriptstyle\pm0.007}$ & $0.992{\scriptstyle\pm0.001}$ & $0.991{\scriptstyle\pm0.002}$ & $\mathbf{0.993{\scriptstyle\pm0.001}}$ \\
     \midrule
     \multicolumn{6}{l}{\emph{AUC on the held-out attack type}} \\
-@QMI_T_ZZ_HELD@
+    QKD & $0.945{\scriptstyle\pm0.003}$ & $\mathbf{0.948{\scriptstyle\pm0.008}}$ & $0.941{\scriptstyle\pm0.009}$ & $0.927{\scriptstyle\pm0.015}$ & $0.942{\scriptstyle\pm0.005}$ \\
+    QKD, centred Mahal. & $0.568{\scriptstyle\pm0.027}$ & $0.929{\scriptstyle\pm0.012}$ & $0.916{\scriptstyle\pm0.013}$ & $0.932{\scriptstyle\pm0.009}$ & $\mathbf{0.944{\scriptstyle\pm0.005}}$ \\
+    QKD, no Mahal. & $0.586{\scriptstyle\pm0.019}$ & $0.933{\scriptstyle\pm0.008}$ & $0.903{\scriptstyle\pm0.008}$ & $0.939{\scriptstyle\pm0.004}$ & $\mathbf{0.940{\scriptstyle\pm0.008}}$ \\
+    Synthetic flows & $0.527{\scriptstyle\pm0.034}$ & $0.678{\scriptstyle\pm0.037}$ & $0.648{\scriptstyle\pm0.037}$ & $\mathbf{0.690{\scriptstyle\pm0.030}}$ & $0.679{\scriptstyle\pm0.038}$ \\
+    UNSW-NB15 & $0.820{\scriptstyle\pm0.010}$ & $0.783{\scriptstyle\pm0.009}$ & $0.821{\scriptstyle\pm0.009}$ & $0.821{\scriptstyle\pm0.002}$ & $\mathbf{0.840{\scriptstyle\pm0.005}}$ \\
+    CIC-IDS2017 & $0.744{\scriptstyle\pm0.123}$ & $0.628{\scriptstyle\pm0.114}$ & $0.874{\scriptstyle\pm0.065}$ & $0.848{\scriptstyle\pm0.070}$ & $\mathbf{0.890{\scriptstyle\pm0.045}}$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -544,7 +577,13 @@ without seeing held-out attacks.
   \label{fig:zz}
 \end{figure}
 
-@QMI_ZZ_TEXT@
+Table~\ref{tab:zz} and Fig.~\ref{fig:zz} compare five kernels on the same eight inputs. The ZZ map is not norm invariant. It does not share the failure of plain AE on synthetic flows (held-out AUC 0.648 against 0.527). It is close to the classical kernels everywhere. But it is not the best kernel on held-out attacks in any of the six settings. The tuned Laplacian kernel is best in four of them.
+
+Reducing to eight inputs changes some results from the full-dimensional study. Held-out AUC on synthetic flows falls for every kernel. On the public data the anchor now lowers held-out AUC, by 0.036 on UNSW-NB15 and 0.116 on CIC-IDS2017. So the anchor is not free. It helps when the norm carries the signal and can hurt when it does not.
+
+The centred QKD setting isolates the sign ambiguity. Standardizing the Mahalanobis column makes it signed. A block far from normal and a block unusually close to normal then differ mainly in sign, which $K_A$ cannot see. Plain AE falls from 0.945 to 0.568. The anchor restores 0.929.
+
+Tuning the classical baseline mattered as much as the encoding. In a first run the RBF width grid stopped at $\gamma=3/q$. On CIC-IDS2017 the ZZ map then appeared to beat RBF by 0.20 in held-out AUC (0.874 against 0.672). Extending the grid to $10/q$ raised RBF to 0.848 and the Laplacian kernel reached 0.890. The selected classical widths on both public datasets still sit at the top of the extended grid. Wider grids might change the classical numbers again. We report the grid as run.
 
 \begin{table}[t]
   \centering
@@ -556,12 +595,17 @@ without seeing held-out attacks.
     \toprule
     Domain & Selected $\beta$ (median) & Entries at selected $\beta$ & Entries at $\beta=1$ \\
     \midrule
-@QMI_T_CONC@
+    QKD & $0.02$ & $0.641\pm0.315$ & $0.005\pm0.009$ \\
+    QKD, centred Mahal. & $0.05$ & $0.464\pm0.244$ & $0.006\pm0.010$ \\
+    QKD, no Mahal. & $0.05$ & $0.510\pm0.235$ & $0.011\pm0.016$ \\
+    Synthetic flows & $0.05$ & $0.485\pm0.261$ & $0.005\pm0.008$ \\
+    UNSW-NB15 & $0.2$ & $0.091\pm0.207$ & $0.019\pm0.089$ \\
+    CIC-IDS2017 & $0.2$ & $0.036\pm0.129$ & $0.007\pm0.034$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-@QMI_CONC_TEXT@
+Bandwidth matters for the ZZ map as theory predicts (Table~\ref{tab:conc}). At $\beta=1$ the off-diagonal entries average 0.005 to 0.019, close to the fully concentrated value $2^{-8}$. Cross-validation picks $\beta$ between 0.01 and 0.8. There the entries spread out and the kernel can learn. This matches the concentration and bandwidth results of earlier work~\cite{thanasilp2024exponential,shaydulin2022importance,canatar2022bandwidth}.
 
 \subsection{Finite shots}
 \label{sec:shots}
@@ -577,12 +621,15 @@ without seeing held-out attacks.
     \toprule
     Kernel & Test & $S=100$ & $S=1000$ & $S=10000$ \\
     \midrule
-@QMI_T_SHOTS@
+    AE-anchored & In-distribution & $-0.008$ & $+0.001$ & $+0.001$ \\
+     & Held-out & $-0.007$ & $-0.002$ & $-0.000$ \\
+    ZZ & In-distribution & $-0.016$ & $-0.004$ & $-0.001$ \\
+     & Held-out & $-0.016$ & $-0.004$ & $+0.001$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-@QMI_SHOTS_TEXT@
+Shot noise costs little accuracy at the sample size we use (Table~\ref{tab:shots}). With 1000 shots per entry, the worst setting loses 0.015 AUC for either kernel. With 100 shots the ZZ kernel loses up to 0.051 on QKD data, centred Mahal.. The anchored amplitude kernel loses at most 0.032. The real cost is the number of circuit runs. A training Gram matrix on 1000 samples at 1000 shots per entry needs about $5\times10^8$ executions, before any test point is scored. The closed form of Proposition~\ref{prop:exact} needs none.
 
 \subsection{Can the failure be predicted?}
 
@@ -597,7 +644,11 @@ without seeing held-out attacks.
     \toprule
     Domain & Norm AUC & Direction AUC & Gap \\
     \midrule
-@CB_T_DIAG@
+    QKD & $0.76$ & $0.58$ & $+0.034$ \\
+    QKD, no Mahal. & $0.76$ & $0.59$ & $-0.386$ \\
+    Synthetic flows & $0.90$ & $0.66$ & $-0.313$ \\
+    UNSW-NB15 & $0.51$ & $0.47$ & $+0.013$ \\
+    CIC-IDS2017 & $0.64$ & $0.67$ & $+0.057$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -605,7 +656,7 @@ without seeing held-out attacks.
 A practitioner would like to know in advance whether a dataset falls into the
 failure case. We tried the obvious statistic (Table~\ref{tab:diag}). The norm alone
 separates attacks best on synthetic flows, where AE-SVM fails. But across held-out
-splits it does not predict the gap (@CB_RHO@). It also misses the QKD ablation.
+splits it does not predict the gap ($\rho=-0.09$, $p=0.65$, 28 splits). It also misses the QKD ablation.
 There, removing one coordinate barely changes the norm's separating power yet flips
 the outcome. Which features carry magnitude matters more than the norm's overall
 power. On real traffic, attack families also differ in which features are active,
@@ -625,7 +676,9 @@ and that difference is visible to a direction-only kernel.
     \cmidrule(lr){2-3}\cmidrule(lr){4-5}
     Model & Coverage & Accuracy & Coverage & Accuracy \\
     \midrule
-@HY_T_SELECT@
+    GP & $69\%$ & $97.6\%$ & $0\%$ & -- \\
+    RF-isotonic & $80\%$ & $97.6\%$ & $35\%$ & $98.8\%$ \\
+    AE-SVM & $79\%$ & $97.8\%$ & $31\%$ & $99.3\%$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -725,6 +778,6 @@ invariances, on real held-out classes, against classical kernels at the same sca
   experiments and wrote the manuscript.
 \end{itemize}
 
-\bibliography{../references}
+\bibliography{references}
 
 \end{document}

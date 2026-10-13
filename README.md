@@ -19,14 +19,12 @@ Every compared model is trained on the same subsample at every training size, ov
 | UNSW-NB15 / CIC-IDS2017 | AE-SVM ≈ RBF-SVM (UNSW 0.862 vs 0.863; CIC 0.993 vs 0.994); XGBoost, RF and the DNN lead. |
 | Zero-day (leave one attack type out) | Domain-dependent. In both controlled settings plain AE-SVM fails because its kernel discards input norm: synthetic flows 0.53 vs 0.84 AUC for RBF; QKD without its Mahalanobis feature 0.55 vs 0.94. A norm anchor, φ(x) = (x, c)/‖(x, c)‖, restores 0.79 and 0.94. On the public benchmarks it does not fail. Public data: UNSW-NB15 0.95 vs 0.93 (anchored 0.94); CIC-IDS2017 0.71 vs 0.66 (anchored 0.73). |
 
-## Papers
+## Paper
 
-| Paper | Source | Notes |
-|---|---|---|
-| *The Norm Blind Spot of Amplitude-Encoding Quantum Kernels in Anomaly Detection* (Quantum Machine Intelligence version) | [`papers/qmi/qmi.tex`](papers/qmi/qmi.tex) | Merged paper reframed for a quantum-ML journal: Rayleigh-quotient analysis, anchor theory, ZZ feature map, finite shots |
-| *When Do Amplitude-Encoding Quantum Kernels Help Security Anomaly Detection?* (earlier IEEE-format draft) | [`papers/combined/quasar.tex`](papers/combined/quasar.tex) | Superseded by the QMI version |
-
-Both cite [`papers/references.bib`](papers/references.bib); every entry was checked, see [`papers/REFERENCE_AUDIT.md`](papers/REFERENCE_AUDIT.md).
+*The Norm Blind Spot of Amplitude-Encoding Quantum Kernels in Anomaly Detection*, submitted to
+Quantum Machine Intelligence (Springer). Source [`qmi/qmi.tex`](qmi/qmi.tex), PDF [`qmi/qmi.pdf`](qmi/qmi.pdf).
+It cites [`qmi/references.bib`](qmi/references.bib). Every entry was checked, see
+[`qmi/REFERENCE_AUDIT.md`](qmi/REFERENCE_AUDIT.md).
 
 ## Installation
 
@@ -52,8 +50,9 @@ Run from the repository root with `PYTHONPATH=.`. Set `OMP_NUM_THREADS=1`; paral
 | ZZ feature map and finite shots | `scripts/qmi_experiments.py [qkd synthetic real]` | `data/qmi/qmi_kernels.csv` |
 | QMI figures | `scripts/qmi_figures.py` | `figures/qmi/*.png` |
 | Norm-vs-direction diagnostic | `scripts/norm_diagnostic.py` | `data/norm_diagnostic.csv` |
-| Fill paper numbers | `scripts/fill_papers.py` | `papers/*/…tex` from `*.template.tex` |
-| Paper style check | `scripts/style_check.py papers/*/*.tex` | semicolons, dashes, colons, long sentences |
+| Fill paper numbers | `scripts/fill_papers.py` | `qmi/qmi.tex` from `qmi/qmi.template.tex` |
+| Submission package | `scripts/make_submission.py` | `qmi/submission/`, `qmi/qmi_submission.zip` |
+| Paper style check | `scripts/style_check.py qmi/qmi.tex` | semicolons, dashes, colons, long sentences |
 | Paper tables | `scripts/make_tables.py` | LaTeX rows printed from the CSVs |
 
 `scripts/hyqad/demo.py` runs a short end-to-end HYQAD example. Run tests with `python -m pytest`.
