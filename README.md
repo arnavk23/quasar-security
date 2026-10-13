@@ -24,7 +24,7 @@ Every compared model is trained on the same subsample at every training size, ov
 | Paper | Source | Notes |
 |---|---|---|
 | *When Do Amplitude-Encoding Quantum Kernels Help Security Anomaly Detection?* (merged journal version) | [`papers/combined/quasar.tex`](papers/combined/quasar.tex) | Both domains, public datasets, mechanism and fix |
-| *Calibrated and Kernel-Based Detection of QKD Implementation Attacks: A Controlled Simulation Study* | [`papers/hyqad/paper.tex`](papers/hyqad/paper.tex) | Conference version |
+| *Calibrated and Kernel-Based Detection of QKD Implementation Attacks in a Controlled Simulation* | [`papers/hyqad/paper.tex`](papers/hyqad/paper.tex) | Conference version |
 | *Amplitude-Encoding Kernels for Zero-Trust Network Anomaly Detection* | [`papers/qztna/qcyber.tex`](papers/qztna/qcyber.tex) | Conference version |
 
 All three cite [`papers/references.bib`](papers/references.bib); every entry was checked, see [`papers/REFERENCE_AUDIT.md`](papers/REFERENCE_AUDIT.md).
@@ -52,6 +52,7 @@ Run from the repository root with `PYTHONPATH=.`. Set `OMP_NUM_THREADS=1`; paral
 | Cross-domain figures | `scripts/combined_figures.py` | `figures/combined/*.png` |
 | Norm-vs-direction diagnostic | `scripts/norm_diagnostic.py` | `data/norm_diagnostic.csv` |
 | Fill paper numbers | `scripts/fill_papers.py` | `papers/*/…tex` from `*.template.tex` |
+| Paper style check | `scripts/style_check.py papers/*/*.tex` | semicolons, dashes, colons, long sentences |
 | Paper tables | `scripts/make_tables.py` | LaTeX rows printed from the CSVs |
 
 `scripts/hyqad/demo.py` runs a short end-to-end HYQAD example. Run tests with `python -m pytest`.

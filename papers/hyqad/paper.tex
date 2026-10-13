@@ -5,15 +5,13 @@
 \usepackage{booktabs}
 \usepackage{cite}
 \usepackage{xcolor}
-\usepackage{placeins}
 \usepackage{hyperref}
 
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
 \graphicspath{{../../figures/hyqad/}}
-\renewcommand{\arraystretch}{1.12}
-\newtheorem{proposition}{Proposition}
+\renewcommand{\arraystretch}{1.1}
 
-\title{Calibrated and Kernel-Based Detection of QKD\\Implementation Attacks: A Controlled Simulation Study}
+\title{Calibrated and Kernel-Based Detection of QKD\\Implementation Attacks in a Controlled Simulation}
 
 \author{
   \IEEEauthorblockN{Arnav Kapoor}
@@ -28,410 +26,389 @@
 \maketitle
 
 \begin{abstract}
-Machine-learning detectors for quantum key distribution (QKD) implementation
-attacks are usually evaluated on simulated telemetry, and frequently report
-near-perfect accuracy. We show that such numbers can be an artifact of the
-simulator: without operating-condition drift, a single telemetry feature
-separates attacks from normal blocks perfectly. We build a seeded decoy-state
-BB84 telemetry simulator with drift in loss, misalignment, detector efficiency
-and background light, finite-size QBER noise, and a single \emph{attack-strength}
-parameter $s$ that scales four attack signatures (photon-number splitting,
-detector blinding, Trojan horse, intercept-resend) from blatant to subtle. On it
-we compare a Laplace Gaussian-process classifier (GP), an amplitude-encoding
-fidelity-kernel SVM (AE-SVM, 3 qubits, computed exactly and verified against a
-PennyLane circuit to $10^{-14}$), RBF-SVM, random forests and a GP+AE-SVM
-stacking model, all at matched training sizes over 10 seeds. At $s=0.3$, every
-supervised model lands between $0.80$ and $0.84$ MCC; random forest is best or
-tied-best throughout, and the GP is neither the most accurate nor the best
-calibrated (ECE $0.047$ vs.\ $0.030$ for isotonic-calibrated RF), so it is not
-the best basis for uncertainty-based deferral. The amplitude kernel does carry
-a usable inductive bias: it wins on direction-only control tasks and, on
-unseen attack types, matches RBF-SVM---but only because one feature (a
-Mahalanobis distance) carries the input's magnitude. Removing that feature
-drops AE-SVM's zero-day AUC from $0.95$ to $0.55$, while appending a constant
-``norm anchor'' coordinate before encoding restores it to $0.94$. Code, data and
-every result file are released.
+Machine-learning detectors for attacks on quantum key distribution (QKD) are
+usually tested on simulated telemetry. Many report near-perfect accuracy. We
+show that this can come from the simulator. Without drift in normal operation, a
+single telemetry feature separates attacks perfectly. We build a seeded
+decoy-state BB84 simulator with operating drift, finite-size noise and one
+attack-strength parameter $s$. On it we compare a Gaussian-process classifier
+(GP), an amplitude-encoding fidelity-kernel SVM (AE-SVM), an RBF-kernel SVM,
+random forests and a stacked model. Every model is trained on the same data at
+every training size. At $s=0.3$ all supervised models reach 0.80 to 0.84 MCC.
+Random forests are best or tied best. The GP is the least calibrated model. It
+also gives the worst uncertainty for deferring alerts. AE-SVM matches RBF-SVM.
+It generalizes to unseen attack types only because one feature carries the
+input's magnitude. Removing that feature drops its held-out AUC from 0.95 to
+0.55. A one-coordinate norm anchor restores it to 0.94.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Quantum key distribution, anomaly detection, Gaussian processes, quantum kernels, calibration, simulation methodology
+Quantum key distribution, anomaly detection, Gaussian processes, quantum kernels, calibration, simulation
 \end{IEEEkeywords}
 
 \section{Introduction}
-\label{sec:intro}
 
-QKD derives its security from physics~\cite{bennett1984quantum,gisin2002quantum},
-but deployed systems leak through implementation side channels: photon-number
-splitting (PNS) against multi-photon pulses~\cite{huttner1995photon,lutkenhaus2002pns},
-detector control by bright illumination~\cite{makarov2006effects,lydersen2010hacking},
-Trojan-horse probing of the transmitter or receiver~\cite{gisin2006trojan,jain2014trojan},
-and intercept-resend~\cite{bennett1992experimental}. Decoy states~\cite{lo2005decoy}
-and measurement-device-independent designs~\cite{lo2012measurement} close some of
-these channels; continuous telemetry monitoring is a complementary defense, and
-machine learning has been applied to it~\cite{mao2020detecting} and to related
-QKD control problems~\cite{ren2021machine}.
+QKD draws its security from physics~\cite{bennett1984quantum,gisin2002quantum}.
+Real systems still leak through their hardware. Known attacks include
+photon-number splitting (PNS)~\cite{huttner1995photon,lutkenhaus2002pns},
+detector blinding~\cite{makarov2006effects,lydersen2010hacking}, Trojan-horse
+probing~\cite{gisin2006trojan,jain2014trojan} and
+intercept-resend~\cite{bennett1992experimental}.
 
-Two methodological problems make it hard to know what such detectors are worth.
-First, they are typically trained and tested on simulated telemetry, and a
-simulator in which normal operation sits at one fixed operating point makes
-almost any attack signature separable. Second, ``quantum'' components are often
-evaluated at very different training sizes from classical baselines, so a
-comparison confounds model and data.
+Telemetry monitoring is one defense. Machine learning has been applied to
+it~\cite{mao2020detecting} and to related QKD control tasks~\cite{ren2021machine}.
+Two problems make such results hard to judge. Detectors are tested on simulated
+telemetry, and a simulator with one fixed operating point makes most attacks easy
+to spot. Quantum models are also often trained on fewer samples than the
+baselines.
 
-This paper is a controlled simulation study that addresses both. Our
-contributions are:
+This paper is a controlled simulation study. Our contributions are as follows.
 \begin{enumerate}
-\item A seeded decoy-state BB84 telemetry simulator with operating drift and an
-  explicit attack-strength axis $s$, together with leakage checks. Without drift,
-  a single feature gives perfect separation; with it, detection degrades smoothly
-  from MCC $\approx 0.97$ at $s=1$ to $\approx 0.5$ at $s=0.05$ (Section~\ref{sec:sim}).
-\item A matched-$n$ comparison of a GP, an exact amplitude-encoding fidelity
-  kernel, RBF-SVM, random forest (RF) and stacking at every training size from
-  $25$ to $1400$ (Section~\ref{sec:results}).
-\item A mechanism for when the amplitude kernel generalizes to unseen attacks,
-  confirmed by ablation: it needs a feature that carries the input's magnitude,
-  which can be supplied by a one-line norm anchor (Section~\ref{sec:zeroday}).
-\item A calibration and selective-prediction comparison showing that the GP's
-  posterior is not the best uncertainty signal on this data
-  (Section~\ref{sec:calib}).
+\item A seeded telemetry simulator with drift, leakage tests and an attack-strength
+  axis $s$.
+\item A comparison of five detectors trained on the same data at every size.
+\item An explanation, confirmed by ablation, of when the amplitude kernel
+  generalizes to unseen attacks.
+\item Evidence that a recalibrated random forest gives better alert deferral than
+  a GP posterior.
 \end{enumerate}
-All results are from simulation; Section~\ref{sec:limits} states what this does
-and does not establish.
-
-\section{Related Work}
-\label{sec:related}
-
-Hardware countermeasures monitor detector statistics directly, for example
-after-pulse and efficiency estimates computed in real time~\cite{dasilva2012monitoring}.
-Mao et al.~\cite{mao2020detecting} trained neural networks to recognise attacks on
-continuous-variable QKD from measured statistics. We study discrete-variable
-decoy-state BB84 telemetry and focus on evaluation methodology, calibrated
-uncertainty and kernel inductive bias rather than on a new detector.
-
-Quantum kernel methods embed data in a Hilbert space through a state-preparation
-circuit and use state overlaps as a kernel~\cite{havlicek2019supervised,schuld2021machine}.
-Provable advantages exist for specially constructed problems~\cite{liu2021rigorous},
-and whether a quantum kernel helps on a given dataset depends on how its
-geometry matches the data~\cite{huang2021power}. Amplitude encoding is a case in
-which the overlap is classically computable (Proposition~\ref{prop:exact}), so it
-isolates the kernel's inductive bias from any question of quantum speed-up.
-Gaussian processes~\cite{rasmussen2006gaussian} and other Bayesian
-methods~\cite{perusquia2022bayesian} provide model-based uncertainty for anomaly
-detection; post-hoc recalibration~\cite{platt1999probabilistic,zadrozny2002transforming,guo2017calibration}
-is the standard alternative for point-estimate models.
 
 \section{Telemetry Simulator}
 \label{sec:sim}
 
-\subsection{Channel model}
-Each sample is one key-generation block of a decoy-state BB84 link over $L=50$\,km
-of fiber ($\alpha=0.2$\,dB/km). For mean photon number $\mu \sim \mathcal{U}(0.1,1)$,
-transmittance $T=10^{-A/10}$ and detector efficiency $\eta$, the gain and QBER of a
-Poisson source are~\cite{lo2005decoy}
+Each sample is one key-generation block of a decoy-state BB84 link over 50\,km of
+fiber. Let $\mu$ be the mean photon number, $T$ the transmittance and $\eta$ the
+detector efficiency. A Poisson source then gives~\cite{lo2005decoy}
 \begin{align}
 Q_\mu &= Y_0 + \bigl(1-e^{-\eta T\mu}\bigr)(1+p_{\mathrm{ap}}),\\
-E_\mu &= \bigl[\tfrac12 Y_0 + e_d\,(1-e^{-\eta T\mu})(1+p_{\mathrm{ap}})\bigr]/Q_\mu ,
+E_\mu &= \bigl[\tfrac12 Y_0 + e_d\,(1-e^{-\eta T\mu})(1+p_{\mathrm{ap}})\bigr]/Q_\mu .
 \end{align}
-with afterpulse probability $p_{\mathrm{ap}}=0.005$. Normal operation is not a
-single point: per block, the attenuation $A$ drifts by $\mathcal{N}(0,0.3^2)$\,dB
-around $\alpha L$, $\eta$ by $3\%$ around $0.9$, and the misalignment error $e_d$,
-dark-count probability $Y_0$ and background rate are log-normal around $0.01$,
-$10^{-5}$ and $100$\,s$^{-1}$ (log-scale s.d.\ $0.4$, $0.3$, $0.3$). The two
-reported error rates (sifted QBER and decoy-basis error rate) carry independent
-finite-size noise $\sqrt{E(1-E)/N_b}$ with $N_b=5000$. Seven measurements are
-reported per block: QBER, photon count rate, detection efficiency, dark-count
-rate, error rate, attenuation and background rate.
+Here $Y_0$ is the dark-count probability, $e_d$ the misalignment error and
+$p_{\mathrm{ap}}=0.005$ the afterpulse probability.
 
-\subsection{Attack models and strength}
-The four attacks perturb these measurements as in prior qualitative
-descriptions~\cite{huttner1995photon,makarov2006effects,gisin2006trojan,bennett1992experimental}:
-PNS removes a fraction $0.3$ of photons and raises QBER by $\mathcal{U}(0.02,0.08)$;
-blinding divides efficiency by $1+1.5\gamma$, $\gamma\sim\mathcal{U}(0.5,1.5)$, and
-raises QBER by $\mathcal{U}(0.05,0.25)$; Trojan-horse probing multiplies background
-by $1+10\rho$, $\rho\sim0.05\,\mathcal{U}(0.5,2)$; intercept-resend raises QBER by
-$\mathcal{U}(0.10,0.35)$ and lowers the count rate. These magnitudes are modeling
-assumptions, not measured values. Every deviation from the clean block is
-multiplied by a strength $s\ge0$, so $s=1$ is the default and $s\to0$ makes an
-attack indistinguishable from normal operation (Fig.~\ref{fig:qber}).
+Normal operation drifts from block to block. Loss varies by 0.3\,dB and detector
+efficiency by 3\%. Misalignment, dark counts and background light vary
+log-normally. The two error-rate estimates carry finite-size noise for blocks of
+5,000 bits. Each block reports seven measurements.
+
+The four attacks perturb these measurements following their published
+descriptions~\cite{huttner1995photon,makarov2006effects,gisin2006trojan,bennett1992experimental}.
+The perturbation sizes are modeling assumptions. Every deviation is multiplied by
+a strength $s$. At $s=1$ the attack uses its default size. As $s$ falls toward 0
+it becomes indistinguishable from normal blocks (Fig.~\ref{fig:qber}).
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.92\textwidth]{fig2_qber_dist.png}
-  \caption{QBER by class at attack strength $s=1$ and $s=0.3$. At $s=0.3$, PNS and
-  Trojan-horse blocks sit well below the 11\% bound and overlap normal operation.}
+  \includegraphics[width=0.8\textwidth]{fig2_qber_dist.png}
+  \caption{QBER by class at $s=1$ and $s=0.3$. At $s=0.3$, PNS and Trojan-horse blocks overlap normal operation well below the 11\% bound.}
   \label{fig:qber}
 \end{figure*}
 
-\subsection{Leakage checks}
-Two properties are tested in the released test suite. (i) Different seeds give
-different datasets, and every random draw, including attack perturbations,
-derives from the dataset seed. (ii) No single feature is a label proxy: block
-timestamps are drawn independently of the label, and a depth-2 decision tree on
-any single feature stays below perfect accuracy. We include these checks because
-an earlier version of our own pipeline failed both, which made every detector
-look near-perfect; we expect the same failure in other simulation-only QKD
-detection results.
+We release two leakage tests with the simulator. Different seeds must give
+different datasets. No single feature may act as a label. An earlier version of
+our own pipeline failed both tests. There, the error rate alone separated
+attacks perfectly and every model looked near-perfect.
 
 \section{Detectors and Protocol}
-\label{sec:method}
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{fig1_framework_hyqad.png}
-  \caption{Study design: simulator, attack models with strength $s$, a fixed 8-dimensional feature map shared by every detector, and the evaluation suite.}
+  \caption{Study design. All detectors share one 8-dimensional feature map.}
   \label{fig:framework}
 \end{figure*}
 
-\textbf{Features.} Every detector sees the same 8 features
-(Fig.~\ref{fig:framework}): the 7 measurements standardized on the training
-split, plus the robust Mahalanobis distance~\cite{rousseeuw1999fast} of the
-standardized vector to the training-split normal blocks.
+Every detector sees the same 8 features (Fig.~\ref{fig:framework}). These are
+the 7 measurements standardized on the training data and a robust Mahalanobis
+distance~\cite{rousseeuw1999fast} to normal training blocks.
 
-\textbf{Amplitude-encoding fidelity kernel (AE-SVM).} A vector
-$\mathbf{x}\in\mathbb{R}^d$ is zero-padded to $2^q$ entries, $q=\lceil\log_2 d\rceil$,
-and normalized, giving the state $|\psi(\mathbf{x})\rangle=\sum_i \hat{x}_i|i\rangle$.
-The fidelity kernel is $K_A(\mathbf{x},\mathbf{y})=|\langle\psi(\mathbf{x})|\psi(\mathbf{y})\rangle|^2$.
+AE-SVM pads a vector with zeros to $2^q$ entries and normalizes it. Its fidelity
+kernel is
+\begin{equation}
+K_A(\mathbf{x},\mathbf{y}) = |\langle\psi(\mathbf{x})|\psi(\mathbf{y})\rangle|^2
+= (\hat{\mathbf{x}}^{\mathsf{T}}\hat{\mathbf{y}})^2 .
+\label{eq:ka}
+\end{equation}
+This is the squared cosine similarity. It is cheap to compute classically. A
+PennyLane~\cite{bergholm2018pennylane} simulation of the overlap circuit agrees
+with it to $7\times10^{-15}$. The circuit takes 26\,ms per kernel entry and the
+closed form $3\times10^{-4}$\,ms. All 8 features fit on 3 qubits.
 
-\begin{proposition}\label{prop:exact}
-$K_A(\mathbf{x},\mathbf{y}) = (\hat{\mathbf{x}}^{\mathsf{T}}\hat{\mathbf{y}})^2$,
-the squared cosine similarity of the inputs. It is computable classically in
-$\mathcal{O}(d)$ time per pair and is invariant to $\mathbf{x}\mapsto c\,\mathbf{x}$
-for every $c\neq0$, including $c=-1$.
-\end{proposition}
-\noindent The proof is immediate from real amplitudes and zero padding. We
-therefore evaluate the kernel exactly with all 8 features on 3 qubits, and
-confirm that a PennyLane~\cite{bergholm2018pennylane} state-vector simulation of
-the overlap circuit agrees to $7\times10^{-15}$; the circuit costs $26$\,ms per
-kernel entry versus $3\times10^{-4}$\,ms in closed form. The SVM uses $C=1$, balanced
-class weights and Platt-scaled probabilities~\cite{platt1999probabilistic}.
+$K_A$ ignores the input's norm, since $K_A(c\mathbf{x},\mathbf{y})=K_A(\mathbf{x},\mathbf{y})$
+for any $c\neq0$. A norm-anchored variant appends a constant $c$ before encoding.
+We set $c$ to the median training norm.
 
-\textbf{Baselines.} A Laplace GP classifier~\cite{rasmussen2006gaussian} with an
-RBF+white-noise kernel (hyperparameters chosen by marginal likelihood on a
-stratified 300-sample subset, then fixed for the full fit); RBF-SVM with the same
-SVM settings as AE-SVM; RF (200 trees)~\cite{breiman2001random}, raw and
-isotonic-calibrated~\cite{zadrozny2002transforming}; a stacking model (Hybrid)
-combining GP and AE-SVM through logistic regression with 3-fold
-cross-validation~\cite{wolpert1992stacked}; and three novelty detectors fit on
-normal training blocks only (one-class SVM, isolation forest, LOF).
+The baselines are a Laplace GP~\cite{rasmussen2006gaussian} and an RBF-kernel SVM.
+We also use random forests (RF, 200 trees)~\cite{breiman2001random}, both raw and
+isotonic-calibrated~\cite{zadrozny2002transforming}. Hybrid stacks the GP and
+AE-SVM~\cite{wolpert1992stacked}. Three novelty detectors are fit on normal data
+only.
 
-\textbf{Protocol.} $N=2000$ blocks with 30\% attacks (balanced across types),
-70/30 stratified split, 10 seeds; we report means with 95\% confidence intervals
-over seeds. Matched-$n$ experiments train \emph{every} model on the same
-stratified subsample, for $n\in\{25,50,100,200,500,1000,1400\}$. Paired model
-comparisons use the exact McNemar test per seed. Zero-day experiments train on
-three attack types and test on normal blocks plus the held-out fourth, at
-$1{,}200$ test blocks per split.
+Each run uses 2,000 blocks with 30\% attacks and a 70/30 split. We repeat it over
+10 seeds and report 95\% confidence intervals. Matched-size runs train every model
+on the same subsample. Zero-day runs train on three attack types and test on the
+fourth.
 
 \section{Results}
-\label{sec:results}
 
-\subsection{In-distribution detection}
-
-\begin{table}[t]
+\begin{table*}[t]
   \centering
-  \caption{Detection at $n=1400$ (mean $\pm$ 95\% CI, 10 seeds). ECE uses 15 equal-width bins.}
+  \caption{Detection at $n=1400$ (mean $\pm$ 95\% CI, 10 seeds). ECE uses 15 bins. Bold marks the best supervised value per column.}
   \label{tab:bench}
-  \scriptsize
-  \setlength{\tabcolsep}{2.6pt}
+  \footnotesize
   \begin{tabular}{lcccccc}
     \toprule
     & \multicolumn{3}{c}{$s=1.0$} & \multicolumn{3}{c}{$s=0.3$} \\
     \cmidrule(lr){2-4}\cmidrule(lr){5-7}
     Model & MCC & AUC & ECE & MCC & AUC & ECE \\
     \midrule
-    RF          & $\mathbf{.975}{\scriptstyle\pm.008}$ & $.999$ & $.013$ & $\mathbf{.834}{\scriptstyle\pm.013}$ & $.969$ & $.030$ \\
-    RF-isotonic & $.972{\scriptstyle\pm.008}$ & $.997$ & $\mathbf{.010}$ & $\mathbf{.837}{\scriptstyle\pm.013}$ & $.967$ & $\mathbf{.030}$ \\
-    Hybrid      & $.971{\scriptstyle\pm.005}$ & $.999$ & $.015$ & $\mathbf{.833}{\scriptstyle\pm.016}$ & $.969$ & $.037$ \\
-    RBF-SVM     & $.969{\scriptstyle\pm.008}$ & $.999$ & $.011$ & $.810{\scriptstyle\pm.015}$ & $.957$ & $.040$ \\
-    GP          & $.964{\scriptstyle\pm.009}$ & $.999$ & $.039$ & $.801{\scriptstyle\pm.016}$ & $.956$ & $.047$ \\
-    AE-SVM      & $.955{\scriptstyle\pm.011}$ & $.999$ & $.015$ & $.814{\scriptstyle\pm.023}$ & $\mathbf{.970}$ & $.032$ \\
+    RF & $\mathbf{.975{\scriptstyle\pm.008}}$ & $\mathbf{0.999}$ & $0.013$ & $.834{\scriptstyle\pm.013}$ & $0.969$ & $\mathbf{0.030}$ \\
+    RF-isotonic & $.972{\scriptstyle\pm.008}$ & $0.997$ & $\mathbf{0.010}$ & $\mathbf{.837{\scriptstyle\pm.013}}$ & $0.967$ & $\mathbf{0.030}$ \\
+    Hybrid & $.971{\scriptstyle\pm.005}$ & $\mathbf{0.999}$ & $0.015$ & $.833{\scriptstyle\pm.016}$ & $0.969$ & $0.037$ \\
+    RBF-SVM & $.969{\scriptstyle\pm.008}$ & $\mathbf{0.999}$ & $0.011$ & $.810{\scriptstyle\pm.015}$ & $0.957$ & $0.040$ \\
+    GP & $.964{\scriptstyle\pm.009}$ & $\mathbf{0.999}$ & $0.039$ & $.801{\scriptstyle\pm.016}$ & $0.956$ & $0.047$ \\
+    AE-SVM & $.955{\scriptstyle\pm.011}$ & $\mathbf{0.999}$ & $0.015$ & $.814{\scriptstyle\pm.023}$ & $\mathbf{0.970}$ & $0.032$ \\
+    AE-SVM (anchored) & $.968{\scriptstyle\pm.008}$ & $\mathbf{0.999}$ & $0.012$ & $.816{\scriptstyle\pm.019}$ & $0.965$ & $\mathbf{0.030}$ \\
     \midrule
-    OC-SVM      & $.838{\scriptstyle\pm.016}$ & $.994$ & -- & $.657{\scriptstyle\pm.017}$ & $.839$ & -- \\
-    IF          & $.837{\scriptstyle\pm.021}$ & $.997$ & -- & $.722{\scriptstyle\pm.019}$ & $.929$ & -- \\
-    LOF         & $.824{\scriptstyle\pm.021}$ & $.997$ & -- & $.691{\scriptstyle\pm.011}$ & $.924$ & -- \\
+    OC-SVM & $.838{\scriptstyle\pm.016}$ & $0.994$ & -- & $.657{\scriptstyle\pm.017}$ & $0.839$ & -- \\
+    IF & $.837{\scriptstyle\pm.021}$ & $0.997$ & -- & $.722{\scriptstyle\pm.019}$ & $0.929$ & -- \\
+    LOF & $.824{\scriptstyle\pm.021}$ & $0.997$ & -- & $.691{\scriptstyle\pm.011}$ & $0.924$ & -- \\
     \bottomrule
   \end{tabular}
-\end{table}
+\end{table*}
 
-Table~\ref{tab:bench} reports detection at the full training size. At $s=1$
-every supervised model exceeds $0.95$ MCC and $0.99$ AUC, so this operating point
-does not discriminate between methods; the novelty detectors, which never see an
-attack label, reach $0.82$--$0.84$ MCC. At $s=0.3$ the supervised models spread
-between $0.80$ and $0.84$ MCC: RF, isotonic RF and Hybrid lead, and the GP has the
-lowest attack recall ($0.78\pm0.02$, against $0.85$ for RF and $0.90$ for
-AE-SVM) because it trades recall for specificity ($0.98$). Hybrid improves on
-the GP alone (pooled over seeds, Hybrid corrects $154$ GP errors and introduces
-$76$; McNemar $p<0.05$ on 4 of 10 seeds) but does not improve on RF. AE-SVM
-matches RBF-SVM in accuracy (both $0.920$; McNemar $p>0.05$ on every seed) and has
-the highest AUC ($0.970$).
+\subsection{In-distribution detection}
 
-\subsection{Matched training size}
+At $s=1$ every supervised model passes 0.95 MCC (Table~\ref{tab:bench}). This
+setting cannot tell the methods apart. At $s=0.3$ the models spread from 0.80 to
+0.84 MCC. RF, isotonic RF and Hybrid lead.
 
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=0.92\textwidth]{fig3_matched_n.png}
-  \caption{MCC versus training size, every model trained on the same stratified subsample (mean $\pm$ 95\% CI, 10 seeds). The Hybrid model is unstable at $n=25$, where its 3-fold stacking has only $\approx$8 training blocks per fold.}
-  \label{fig:matched}
-\end{figure*}
-
-Fig.~\ref{fig:matched} trains every model at every $n$. RF is the most
-sample-efficient model at both strengths (MCC $0.75$ at $n=25$, $s=0.3$, against
-$0.65$--$0.68$ for the kernel methods and GP). The amplitude kernel needs more data
-than the RBF kernel to reach the same MCC: at $s=0.3$ AE-SVM trails RBF-SVM by
-$0.03$--$0.04$ for $n=50$--$200$ and reaches parity only from $n=1000$
-($0.804$ vs.\ $0.806$); at $s=1$ it trails by $0.008$--$0.017$ at every $n\ge50$.
-There is no training size at which it is reliably ahead.
-
-\subsection{Attack strength}
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=0.92\textwidth]{fig4_strength_sweep.png}
-  \caption{Left: MCC versus attack strength at $n=1400$. Right: GP recall per attack type. Trojan-horse and PNS signatures are lost first.}
-  \label{fig:strength}
-\end{figure*}
-
-All four detectors degrade together as $s$ falls (Fig.~\ref{fig:strength}),
-from MCC $0.96$--$0.98$ at $s=1$ to $0.61$--$0.62$ at $s=0.1$ and $0.47$--$0.51$ at
-$s=0.05$. RF is best at every $s\ge0.2$; below that all four are within $0.04$
-MCC of each other. Per attack type, intercept-resend and detector blinding keep
-GP recall $\ge0.97$ down to $s=0.1$ because they move QBER the most, while PNS
-and Trojan-horse probing are lost first (Trojan-horse recall $0.45$ at $s=0.3$).
-
-\subsection{Unseen attack types}
-\label{sec:zeroday}
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=0.92\textwidth]{fig5_zeroday.png}
-  \caption{AUC on a held-out attack type, training on the other three (mean $\pm$ 95\% CI, 10 seeds).}
-  \label{fig:zeroday}
-\end{figure*}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=0.92\columnwidth]{fig9_mahal_ablation.png}
-  \caption{Mean zero-day AUC with and without the Mahalanobis feature. Without it, the amplitude kernel discards all magnitude information and fails on unseen attacks; a norm anchor restores it.}
-  \label{fig:mahal}
-\end{figure}
-
-In leave-one-attack-out tests (Fig.~\ref{fig:zeroday}) AE-SVM generalizes as
-well as RF and better than RBF-SVM at $s=0.3$ (mean AUC $0.952$ vs.\ $0.917$),
-despite a lower kernel-target alignment~\cite{cristianini2002kernel}
-with the labels ($0.13$--$0.22$ vs.\ $0.29$--$0.66$ across attack types). Proposition~\ref{prop:exact} suggests why
-this is fragile: $K_A$ ignores $\|\mathbf{x}\|$, and an unseen attack is most
-easily recognised by \emph{how far} it is from normal operation, which is a
-magnitude. In our feature map that magnitude is carried by one coordinate, the
-Mahalanobis distance. Removing it (Fig.~\ref{fig:mahal}) drops AE-SVM's mean
-zero-day AUC to $0.554$ at $s=0.3$ and $0.635$ at $s=1$, while RBF-SVM is
-unaffected ($0.940$, $0.987$). Appending a constant coordinate
-$c=\mathrm{median}_{\mathrm{train}}\|\mathbf{x}\|$ before encoding, so that
-$\phi(\mathbf{x})=(\mathbf{x},c)/\|(\mathbf{x},c)\|$ retains the input's norm relative
-to $c$, restores AE-SVM to $0.939$ and $0.980$ without the Mahalanobis feature.
-
-\subsection{When the amplitude kernel helps}
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=0.92\textwidth]{fig8_kernel_crossover.png}
-  \caption{Control tasks in $\mathbb{R}^8$ with heavy-tailed norms. Left: label depends on direction only. Right: label depends on norm only.}
-  \label{fig:crossover}
-\end{figure*}
-
-Fig.~\ref{fig:crossover} isolates the inductive bias. When the label depends only
-on direction and the norm is a heavy-tailed nuisance, AE-SVM learns from far
-fewer samples than any baseline ($0.71$ vs.\ $0.56$ for RBF-SVM at $n=25$; $0.97$
-vs.\ $0.74$ at $n=1000$). When the label depends only on norm, AE-SVM is at
-chance at every $n$. QKD telemetry is neither extreme, which is why the kernel is
-competitive but not superior on it.
-
-\subsection{Calibration and selective prediction}
-\label{sec:calib}
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=0.92\textwidth]{fig6_calibration_selective.png}
-  \caption{Left: ECE by model. Right: accuracy versus coverage when deferring samples with uncertainty $u=\sqrt{p(1-p)}$ above a threshold ($s=0.3$).}
-  \label{fig:calib}
-\end{figure*}
-
-The GP's Laplace posterior is the least calibrated supervised model here
-(ECE $0.047\pm0.006$ at $s=0.3$ and $0.039\pm0.002$ at $s=1$), and isotonic RF the
-best ($0.030$ and $0.010$). For selective prediction (Fig.~\ref{fig:calib}), the
-GP's probabilities are concentrated near the decision boundary: at threshold
-$u<0.3$ it keeps $69\%$ of test blocks at $97.6\%$ accuracy, while isotonic RF
-keeps $80\%$ at the same accuracy and AE-SVM $79\%$ at $97.8\%$; at $u<0.1$ the GP
-retains no blocks at all at $s=0.3$. A model-based posterior is attractive in
-principle, but on this data a cheaply recalibrated point estimator gives the
-better deferral policy.
-
-\subsection{Evasion and latency}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig7_adversarial.png}
-  \caption{Detection rate of attack blocks ($s=0.3$) whose five most RF-important features are moved a fraction (the budget) of the way toward the normal median, and the GP's mean uncertainty on them.}
-  \label{fig:adv}
-\end{figure}
+The GP has the lowest attack recall at $s=0.3$, 0.78 against 0.85 for RF and
+0.90 for AE-SVM. It trades recall for specificity. Hybrid fixes 154 GP errors
+and adds 76 across all seeds. Its gain is significant (McNemar) on 4 of 10
+seeds. AE-SVM and RBF-SVM never differ significantly at $s=0.3$.
 
 \begin{table}[t]
   \centering
-  \caption{Inference latency on one CPU core (training excluded). Batch: amortised over 600 blocks. Single: median for one block, dominated by Python call overhead.}
-  \label{tab:latency}
+  \caption{MCC at matched training size $n$ (mean of 10 seeds).}
+  \label{tab:matched}
   \footnotesize
-  \begin{tabular}{lrr}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{llcccc}
     \toprule
-    Component & Batch (ms/block) & Single (ms) \\
+    $s$ & Model & $n=25$ & 100 & 500 & 1400 \\
     \midrule
-    Feature map & $0.0004$ & $0.14$ \\
-    AE-SVM (exact) & $0.008$ & $0.35$ \\
-    RBF-SVM & $0.012$ & $0.16$ \\
-    RF (200 trees) & $0.093$ & $23.4$ \\
-    Hybrid & $0.33$ & $26.9$ \\
-    GP & $0.38$ & $29.6$ \\
+    1 & AE-SVM & $0.795$ & $0.910$ & $0.946$ & $0.955$ \\
+    1 & RBF-SVM & $0.755$ & $0.920$ & $0.960$ & $0.969$ \\
+    1 & GP & $0.889$ & $0.916$ & $0.960$ & $0.964$ \\
+    1 & RF & $0.930$ & $0.964$ & $0.972$ & $0.975$ \\
+    1 & Hybrid & $0.800$ & $0.962$ & $0.968$ & $0.971$ \\
+    \midrule
+    0.3 & AE-SVM & $0.672$ & $0.745$ & $0.785$ & $0.814$ \\
+    0.3 & RBF-SVM & $0.676$ & $0.784$ & $0.799$ & $0.810$ \\
+    0.3 & GP & $0.645$ & $0.727$ & $0.790$ & $0.801$ \\
+    0.3 & RF & $0.753$ & $0.798$ & $0.828$ & $0.834$ \\
+    0.3 & Hybrid & $0.461$ & $0.771$ & $0.813$ & $0.833$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-A simple gradient-free evasion that moves each attack block's five most
-important features toward the normal median (Fig.~\ref{fig:adv}) lowers RF and
-GP detection together, with RF ahead by 2--9 points at every budget at $s=0.3$
-(2--10 points at $s=1$). The GP's
-mean uncertainty on evading blocks barely changes ($0.30$ to $0.33$ at $s=0.3$),
-so uncertainty alone does not flag this evasion. Table~\ref{tab:latency}
-gives inference cost: all detectors are far below a per-block budget measured
-in seconds; the kernel SVMs are cheapest in batch, and the GP and Hybrid models
-are slowest.
+\subsection{Training size and attack strength}
+
+RF learns fastest at both strengths (Table~\ref{tab:matched}). AE-SVM needs more
+data than RBF-SVM to reach the same MCC. It is never reliably ahead. Hybrid is
+unstable at $n=25$, where its stacking folds hold only 8 blocks each.
+
+\begin{table}[t]
+  \centering
+  \caption{MCC against attack strength $s$ at $n=1400$, and GP recall per attack type.}
+  \label{tab:strength}
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{lcccccc}
+    \toprule
+    $s$ & 0.05 & 0.1 & 0.2 & 0.3 & 0.5 & 1.0 \\
+    \midrule
+    AE-SVM & $0.47$ & $0.61$ & $0.73$ & $0.81$ & $0.89$ & $0.96$ \\
+    RBF-SVM & $0.49$ & $0.62$ & $0.73$ & $0.81$ & $0.90$ & $0.97$ \\
+    GP & $0.51$ & $0.62$ & $0.71$ & $0.80$ & $0.90$ & $0.96$ \\
+    RF & $0.48$ & $0.62$ & $0.75$ & $0.83$ & $0.92$ & $0.97$ \\
+    \midrule
+    GP recall, PNS & $0.09$ & $0.18$ & $0.48$ & $0.70$ & $0.88$ & $0.99$ \\
+    GP recall, Blinding & $0.85$ & $0.97$ & $1.00$ & $1.00$ & $1.00$ & $1.00$ \\
+    GP recall, Trojan & $0.09$ & $0.12$ & $0.25$ & $0.45$ & $0.67$ & $0.84$ \\
+    GP recall, Int.-res. & $0.84$ & $0.99$ & $1.00$ & $1.00$ & $1.00$ & $1.00$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+All four detectors fall together as $s$ shrinks (Table~\ref{tab:strength}). RF
+leads for $s\ge0.2$. Below that the models are within 0.04 MCC of each other.
+Blinding and intercept-resend stay visible down to $s=0.1$ because they raise
+QBER the most. PNS and Trojan-horse probing are lost first.
+
+\subsection{Unseen attack types}
+
+\begin{table}[t]
+  \centering
+  \caption{AUC on a held-out attack type at $s=0.3$ (10 seeds). The last column removes the Mahalanobis feature.}
+  \label{tab:zd}
+  \footnotesize
+  \setlength{\tabcolsep}{2.5pt}
+  \begin{tabular}{lcccccc}
+    \toprule
+    Model & PNS & Blinding & Trojan & Int.-res. & Mean & No Mahal. \\
+    \midrule
+    AE-SVM & $0.950$ & $0.971$ & $0.886$ & $1.000$ & $0.952$ & $0.554$ \\
+    AE-SVM (anchored) & $0.954$ & $0.968$ & $0.873$ & $1.000$ & $0.949$ & $0.939$ \\
+    RBF-SVM & $0.953$ & $0.881$ & $0.856$ & $0.979$ & $0.917$ & $0.940$ \\
+    GP & $0.949$ & $0.973$ & $0.850$ & $0.994$ & $0.941$ & -- \\
+    RF & $0.963$ & $0.997$ & $0.883$ & $0.998$ & $0.960$ & -- \\
+    OC-SVM & $0.784$ & $1.000$ & $0.545$ & $1.000$ & $0.832$ & -- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{fig9_mahal_ablation.png}
+  \caption{Mean held-out AUC with and without the Mahalanobis feature.}
+  \label{fig:mahal}
+\end{figure}
+
+AE-SVM generalizes nearly as well as RF and better than RBF-SVM (Table~\ref{tab:zd}).
+This is surprising, because its kernel-target
+alignment~\cite{cristianini2002kernel} is lower. It is 0.13 to 0.22 against 0.29
+to 0.66 for RBF.
+
+The explanation is Eq.~\eqref{eq:ka}. $K_A$ ignores the norm, but an unseen
+attack is easiest to spot by how far it sits from normal blocks. In our features
+that distance is carried by one coordinate, the Mahalanobis distance. Removing it
+drops AE-SVM to 0.554 at $s=0.3$ and 0.635 at $s=1$ (Fig.~\ref{fig:mahal}).
+RBF-SVM is unaffected. The norm anchor restores AE-SVM to 0.939 and 0.980.
+
+\begin{table}[t]
+  \centering
+  \caption{Accuracy on control tasks in $\mathbb{R}^8$ with heavy-tailed norms (10 seeds).}
+  \label{tab:cross}
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{lrcccc}
+    \toprule
+    Label depends on & $n$ & AE-SVM & RBF-SVM & GP & RF \\
+    \midrule
+    Direction only & 25 & $0.707$ & $0.556$ & $0.618$ & $0.606$ \\
+     & 100 & $0.856$ & $0.583$ & $0.652$ & $0.667$ \\
+     & 1000 & $0.966$ & $0.744$ & $0.765$ & $0.794$ \\
+    Norm only & 25 & $0.496$ & $0.799$ & $0.691$ & $0.862$ \\
+     & 100 & $0.499$ & $0.855$ & $0.791$ & $0.924$ \\
+     & 1000 & $0.504$ & $0.958$ & $0.950$ & $0.953$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:cross} isolates this bias. When labels depend on direction only,
+AE-SVM learns from far fewer samples than any baseline. When labels depend on
+norm only, it stays at chance. QKD telemetry lies between these extremes.
+
+\subsection{Calibration and deferral}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig6_calibration_selective.png}
+  \caption{Left, ECE by model. Right, accuracy against coverage when blocks with uncertainty $u=\sqrt{p(1-p)}$ above a threshold are deferred ($s=0.3$).}
+  \label{fig:calib}
+\end{figure*}
+
+\begin{table}[t]
+  \centering
+  \caption{Deferral at $s=0.3$. Coverage is the share of blocks kept, and accuracy is measured on those blocks.}
+  \label{tab:select}
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lcccc}
+    \toprule
+    & \multicolumn{2}{c}{$u<0.3$} & \multicolumn{2}{c}{$u<0.1$} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+    Model & Coverage & Accuracy & Coverage & Accuracy \\
+    \midrule
+    GP & $69\%$ & $97.6\%$ & $0\%$ & -- \\
+    RF-isotonic & $80\%$ & $97.6\%$ & $35\%$ & $98.8\%$ \\
+    AE-SVM & $79\%$ & $97.8\%$ & $31\%$ & $99.3\%$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The GP is the least calibrated supervised model, and isotonic RF the best
+(Table~\ref{tab:bench}, Fig.~\ref{fig:calib}). The GP's probabilities crowd the
+decision boundary. At $u<0.3$ it keeps fewer blocks than isotonic RF or AE-SVM at
+the same accuracy (Table~\ref{tab:select}). At $u<0.1$ it keeps none. On this data
+a recalibrated point estimate makes the better deferral policy.
+
+\subsection{Evasion and cost}
+
+\begin{table}[t]
+  \centering
+  \caption{Evasion at $s=0.3$. The five most important features of each attack block move toward the normal median by the given budget.}
+  \label{tab:adv}
+  \footnotesize
+  \begin{tabular}{lccc}
+    \toprule
+    Budget & RF detection & GP detection & GP uncertainty \\
+    \midrule
+    0.0 & $0.85$ & $0.78$ & $0.30$ \\
+    0.2 & $0.81$ & $0.73$ & $0.30$ \\
+    0.4 & $0.74$ & $0.65$ & $0.30$ \\
+    0.6 & $0.61$ & $0.54$ & $0.30$ \\
+    0.8 & $0.42$ & $0.40$ & $0.33$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  \caption{Inference cost on one CPU core, training excluded. Batch cost is per block over 600 blocks. Single-block cost is dominated by Python call overhead.}
+  \label{tab:latency}
+  \footnotesize
+  \begin{tabular}{lcc}
+    \toprule
+    Component & Batch (ms) & Single (ms) \\
+    \midrule
+    Feature extraction & $0.0004$ & $0.14$ \\
+    AE-SVM & $0.0084$ & $0.35$ \\
+    RBF-SVM & $0.0115$ & $0.16$ \\
+    RF & $0.0934$ & $23.35$ \\
+    Hybrid & $0.3250$ & $26.85$ \\
+    GP & $0.3790$ & $29.63$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+A simple evasion lowers RF and GP detection together (Table~\ref{tab:adv}). RF
+stays 2 to 9 points ahead. The GP's uncertainty barely moves, so it does not flag
+the evasion. Every detector runs far below a per-block budget measured in seconds
+(Table~\ref{tab:latency}).
 
 \section{Limitations}
-\label{sec:limits}
 
-Every result is from simulation. The attack magnitudes are assumptions, and the
-drift model, though grounded in standard channel physics, is not fitted to a
-deployed link; the strength axis $s$ shows how conclusions move with signature
-size but does not say which $s$ a real attacker produces. The evasion attack is
-gradient-free and not adaptive. The detectors see per-block summaries only;
-time-series models over consecutive blocks may do better. Validating the
-ranking of methods, and the zero-day mechanism, on telemetry from a physical QKD
-testbed is the necessary next step.
+Every result is simulated. The attack sizes are assumptions, and the drift model
+is not fitted to a real link. The strength axis shows how results move with
+signature size. It does not say which $s$ a real attacker produces. The evasion is
+gradient-free and not adaptive. The detectors see single blocks, and models over
+block sequences may do better. Testing on a physical QKD testbed is the next step.
 
 \section{Conclusion}
-\label{sec:conclusion}
 
-On a QKD telemetry simulator designed not to be trivially separable, random
-forests are the strongest and most sample-efficient detector, isotonic
-calibration gives better uncertainty for deferral than a GP posterior, and the
-amplitude-encoding fidelity kernel---computable exactly on classical
-hardware---is competitive but not superior. Its one distinctive behavior is
-explained by Proposition~\ref{prop:exact}: it generalizes to unseen attacks only
-when some feature carries the input's magnitude, and a norm anchor supplies that
-when no such feature exists. Simulation-based QKD detection studies should
-report single-feature separability and an attack-strength sweep alongside
-headline accuracy.
+On a simulator built not to be trivially separable, random forests are the
+strongest and fastest-learning detector. Isotonic calibration gives better
+deferral than a GP posterior. The amplitude kernel is competitive but not better.
+It generalizes to unseen attacks only when some feature carries magnitude, and a
+norm anchor supplies this when none does. Simulation studies of QKD detection
+should report single-feature separability and a strength sweep alongside
+accuracy.
 
 \section*{Code and Data Availability}
-Simulator, models, experiment driver (\texttt{scripts/hyqad/run\_experiments.py}),
-figure script and every result CSV are at
+Simulator, models, experiment scripts and all result files are at
 \url{https://github.com/arnavk23/quasar-security}.
 
 \bibliographystyle{IEEEtran}

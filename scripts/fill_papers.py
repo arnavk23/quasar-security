@@ -366,6 +366,46 @@ def fill_hyqad(d):
     return out
 
 
+def fill_combined_tables(d):
+    """Cross-domain tables for papers/combined/quasar.template.tex (no semicolons in output)."""
+    out = {}
+    hz, sz, rz = d["hyz"], d["synz"], d["realz"]
+    ab = pd.read_csv(HY / "zeroday_mahal_ablation.csv")
+    ab = ab[(ab.strength == 0.3) & (ab.features == "without Mahalanobis")]
+    frames = [hz[hz.strength == 0.3], ab, sz, rz[rz.dataset == "UNSW-NB15"], rz[rz.dataset == "CIC-IDS2017"]]
+    best = [f.groupby(["model", "held_out"]).auc.mean().groupby("model").mean().max() for f in frames]
+    rows = []
+    for name in ["AE-SVM", "AE-SVM (nonneg)", "AE-SVM (anchored)", "RBF-SVM", "GP", "RF", "XGBoost", "DNN",
+                 "Autoencoder"]:
+        cells = []
+        for f, b in zip(frames, best):
+            v = mean_zd(f, name)
+            cells.append("--" if np.isnan(v) else (f"$\\mathbf{{{v:.3f}}}$" if abs(v - b) < 5e-4 else f"${v:.3f}$"))
+        rows.append(f"    {name} & " + " & ".join(cells) + r" \\")
+    out["CB_T_ZD"] = "\n".join(rows)
+
+    qa = pd.read_csv(HY / "kernel_alignment.csv")
+    qa = qa[qa.strength == 0.3].groupby("kernel").alignment.mean()
+    sa = pd.read_csv(QZ / "qztna_kernel_alignment.csv").groupby("kernel").alignment.mean()
+    ra = d["reala"].groupby(["dataset", "kernel"]).alignment.mean()
+    out["CB_T_ALIGN"] = "\n".join([
+        f"    AE & ${qa['AE']:.2f}$ & ${sa['AE-SVM']:.2f}$ & ${ra[('UNSW-NB15', 'AE')]:.2f}$ & "
+        f"${ra[('CIC-IDS2017', 'AE')]:.2f}$ \\\\",
+        f"    RBF & ${qa['RBF']:.2f}$ & ${sa['RBF-SVM']:.2f}$ & ${ra[('UNSW-NB15', 'RBF')]:.2f}$ & "
+        f"${ra[('CIC-IDS2017', 'RBF')]:.2f}$ \\\\"])
+
+    nd = pd.read_csv(ROOT / "data" / "norm_diagnostic.csv")
+    g = nd.groupby("domain")[["norm_auc", "dir_auc", "ae_minus_rbf"]].mean()
+    order = ["QKD", "QKD, no Mahal.", "Synthetic flows", "UNSW-NB15", "CIC-IDS2017"]
+    out["CB_T_DIAG"] = "\n".join(
+        f"    {dom} & ${g.loc[dom, 'norm_auc']:.2f}$ & ${g.loc[dom, 'dir_auc']:.2f}$ & "
+        f"${g.loc[dom, 'ae_minus_rbf']:+.3f}$ \\\\" for dom in order)
+    from scipy.stats import spearmanr
+    r = spearmanr(nd.norm_auc - nd.dir_auc, nd.ae_minus_rbf)
+    out["CB_RHO"] = f"$\\rho={r.statistic:.2f}$, $p={r.pvalue:.2f}$, {len(nd)} splits"
+    return out
+
+
 def real_rows(d):
     real = d["real"]
     if real is None:
@@ -403,6 +443,7 @@ if __name__ == "__main__":
     vals = fill_combined(d)
     vals.update(fill_qztna(d))
     vals.update(fill_hyqad(d))
+    vals.update(fill_combined_tables(d))
     rr = real_rows(d)
     if rr is not None:
         vals["REAL_ROWS"] = rr
