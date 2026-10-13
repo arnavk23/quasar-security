@@ -23,11 +23,12 @@ class HybridAnomalyDetector(BaseEstimator, ClassifierMixin):
         use_bayesian: bool = True,
         use_quantum_kernel: bool = True,
         bayesian_kernel: str = "rbf",
-        n_qubits: int = 3,
+        n_qubits: int | None = None,
         quantum_kernel_type: str = "amplitude",
         meta_learner: str = "logistic",
         n_restarts_optimizer: int = 5,
         random_state: int = 42,
+        gp_hyperparam_subset: int | None = None,
     ):
         self.use_bayesian = use_bayesian
         self.use_quantum_kernel = use_quantum_kernel
@@ -37,6 +38,7 @@ class HybridAnomalyDetector(BaseEstimator, ClassifierMixin):
         self.meta_learner = meta_learner
         self.n_restarts_optimizer = n_restarts_optimizer
         self.random_state = random_state
+        self.gp_hyperparam_subset = gp_hyperparam_subset
 
     def _build_estimators(self):
         estimators = []
@@ -46,6 +48,7 @@ class HybridAnomalyDetector(BaseEstimator, ClassifierMixin):
                 kernel=self.bayesian_kernel,
                 n_restarts_optimizer=self.n_restarts_optimizer,
                 random_state=self.random_state,
+                hyperparam_subset=self.gp_hyperparam_subset,
             )
             estimators.append(("bayesian", bayesian))
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quasar-security"
-version = "0.2.0"
+version = "0.3.0"
 description = "QUASAR: QUantum-inspired Anomaly detection with Statistically-Audited Robustness. Matched-scale evaluation of amplitude-encoding/quantum-inspired kernels and calibrated uncertainty quantification for security anomaly detection, spanning QKD physical-layer telemetry (HYQAD) and zero-trust network flows (Q-ZTNA)."
 readme = "README.md"
 requires-python = ">=3.9"

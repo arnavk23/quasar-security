@@ -18,9 +18,16 @@ class ChannelState:
 
 class QKDChannelSimulator:
     """
-    Simulates a realistic Quantum Key Distribution channel
-    incorporating quantum channel noise, photon loss, and
-    environmental disturbances.
+    Simulates per-block telemetry of a decoy-state BB84 link over fiber.
+
+    Each sample is one key-generation block. Normal operation is not a single
+    fixed operating point: the simulator applies slow operating-condition drift
+    (polarization misalignment, fiber/connector loss, detector efficiency, dark
+    counts, ambient background) whose magnitude is set by ``drift_scale``, and
+    finite-size statistical noise on the measured error rates whose magnitude is
+    set by ``block_size``. Without this drift every normal sample sits at
+    essentially the same point and any attack perturbation becomes trivially
+    separable.
     """
 
     def __init__(
@@ -32,6 +39,8 @@ class QKDChannelSimulator:
         misalignment_error: float = 0.01,
         afterpulse_prob: float = 0.005,
         background_noise_rate: float = 100.0,
+        drift_scale: float = 1.0,
+        block_size: int = 5000,
         rng: np.random.Generator | None = None,
     ):
         self.length_km = length_km
@@ -41,6 +50,8 @@ class QKDChannelSimulator:
         self.misalignment_error = misalignment_error
         self.afterpulse_prob = afterpulse_prob
         self.background_noise_rate = background_noise_rate
+        self.drift_scale = drift_scale
+        self.block_size = block_size
         self.rng = rng or np.random.default_rng(42)
 
     @property
@@ -51,25 +62,12 @@ class QKDChannelSimulator:
     def transmittance(self) -> float:
         return 10 ** (-self.total_loss_db / 10)
 
-    def _compute_qber(self, signal_intensity: float) -> float:
-        tau = self.transmittance
-        Y0 = self.dark_count_prob
-        ed = self.misalignment_error
-        mu = signal_intensity
-
-        Y0_term = 0.5 * Y0
-        signal_term = 1 - (1 - self.detector_efficiency * tau) ** mu
-        gain = Y0_term + signal_term * (1 + self.afterpulse_prob)
-
-        eq = 0.5
-        qber_num = Y0_term * eq + signal_term * ed * (1 + self.afterpulse_prob)
-        qber_den = gain + 1e-15
-        return qber_num / qber_den
-
-    def _compute_photon_count_rate(self, signal_intensity: float) -> float:
-        tau = self.transmittance
-        mu = signal_intensity
-        return self.detector_efficiency * tau * mu
+    def _gain_and_qber(self, mu, eta, tau, y0, e_d):
+        """Decoy-state BB84 gain and QBER for a Poisson source (Lo, Ma & Chen 2005)."""
+        signal = (1.0 - np.exp(-eta * tau * mu)) * (1.0 + self.afterpulse_prob)
+        gain = y0 + signal
+        qber = (0.5 * y0 + e_d * signal) / (gain + 1e-15)
+        return gain, qber
 
     def simulate(
         self,
@@ -79,37 +77,38 @@ class QKDChannelSimulator:
         include_anomalies: bool = False,
         anomaly_fraction: float = 0.0,
     ) -> ChannelState:
-        times = np.sort(self.rng.uniform(0, 1, n_samples))
-        signal_intensities = self.rng.uniform(*signal_intensity_range, n_samples)
+        rng = self.rng
+        s = self.drift_scale
+        times = rng.uniform(0, 1, n_samples)
+        mu = rng.uniform(*signal_intensity_range, n_samples)
 
-        qber = np.array([self._compute_qber(mu) for mu in signal_intensities])
-        photon_counts = np.array([self._compute_photon_count_rate(mu) for mu in signal_intensities])
+        # Slow operating-condition drift (per block).
+        attenuation = self.total_loss_db + rng.normal(0, 0.3 * s, n_samples)
+        tau = 10 ** (-attenuation / 10)
+        eta = np.clip(self.detector_efficiency * (1 + rng.normal(0, 0.03 * s, n_samples)), 0.05, 1.0)
+        e_d = self.misalignment_error * rng.lognormal(0, 0.4 * s, n_samples)
+        y0 = self.dark_count_prob * rng.lognormal(0, 0.3 * s, n_samples)
+        bg = self.background_noise_rate * rng.lognormal(0, 0.3 * s, n_samples)
 
-        qber += self.rng.normal(0, noise_scale * 0.1, n_samples)
-        qber = np.clip(qber, 0, 0.5)
-        photon_counts += self.rng.normal(0, noise_scale * photon_counts, n_samples)
-        photon_counts = np.clip(photon_counts, 0, None)
+        _, qber_true = self._gain_and_qber(mu, eta, tau, y0, e_d)
 
-        det_eff = self.detector_efficiency + self.rng.normal(0, noise_scale * 0.02, n_samples)
-        det_eff = np.clip(det_eff, 0, 1)
+        # Finite-size estimation noise on the two error-rate estimates.
+        se = np.sqrt(qber_true * (1 - qber_true) / self.block_size)
+        qber = np.clip(qber_true + rng.normal(0, 1, n_samples) * se, 0, 0.5)
+        error_rate = np.clip(qber_true + rng.normal(0, 1, n_samples) * se, 0, 0.5)
 
-        dark_counts = self.dark_count_prob + self.rng.exponential(
-            self.dark_count_prob * noise_scale, n_samples
-        )
-        error_rates = self.misalignment_error + self.rng.normal(0, noise_scale * 0.005, n_samples)
-        error_rates = np.clip(error_rates, 0, 0.5)
-
-        attenuation = self.total_loss_db + self.rng.normal(0, noise_scale * 0.1, n_samples)
-        bg_noise = self.background_noise_rate + self.rng.normal(
-            0, noise_scale * self.background_noise_rate, n_samples
-        )
-        bg_noise = np.clip(bg_noise, 0, None)
+        photon_counts = eta * tau * mu
+        photon_counts = np.clip(photon_counts * (1 + rng.normal(0, noise_scale, n_samples)), 0, None)
+        det_eff = np.clip(eta + rng.normal(0, noise_scale * 0.02, n_samples), 0, 1)
+        dark_counts = y0 * (1 + rng.normal(0, noise_scale, n_samples)).clip(0.1)
+        att_meas = attenuation + rng.normal(0, noise_scale, n_samples)
+        bg_noise = np.clip(bg * (1 + rng.normal(0, noise_scale, n_samples)), 0, None)
 
         if include_anomalies and anomaly_fraction > 0:
             n_anom = int(n_samples * anomaly_fraction)
-            anom_idx = self.rng.choice(n_samples, n_anom, replace=False)
-            qber[anom_idx] = self.rng.uniform(0.15, 0.5, n_anom)
-            photon_counts[anom_idx] *= self.rng.uniform(0.1, 0.5, n_anom)
+            anom_idx = rng.choice(n_samples, n_anom, replace=False)
+            qber[anom_idx] = rng.uniform(0.15, 0.5, n_anom)
+            photon_counts[anom_idx] *= rng.uniform(0.1, 0.5, n_anom)
 
         return ChannelState(
             time=times,
@@ -117,7 +116,7 @@ class QKDChannelSimulator:
             photon_count_rate=photon_counts,
             detection_efficiency=det_eff,
             dark_count_rate=dark_counts,
-            error_rate=error_rates,
-            signal_attenuation=attenuation,
+            error_rate=error_rate,
+            signal_attenuation=att_meas,
             background_noise=bg_noise,
         )

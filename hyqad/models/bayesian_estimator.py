@@ -26,6 +26,7 @@ class BayesianAnomalyEstimator(BaseEstimator, ClassifierMixin):
         random_state: int = 42,
         max_iter_predict: int = 100,
         prior_strength: float = 1.0,
+        hyperparam_subset: int | None = None,
     ):
         self.kernel = kernel
         self.length_scale = length_scale
@@ -36,6 +37,7 @@ class BayesianAnomalyEstimator(BaseEstimator, ClassifierMixin):
         self.random_state = random_state
         self.max_iter_predict = max_iter_predict
         self.prior_strength = prior_strength
+        self.hyperparam_subset = hyperparam_subset
 
     def _build_kernel(self):
         if self.kernel == "rbf":
@@ -58,9 +60,23 @@ class BayesianAnomalyEstimator(BaseEstimator, ClassifierMixin):
 
     def fit(self, X: NDArray, y: NDArray):
         kernel = self._build_kernel()
+        n_restarts, optimizer = self.n_restarts_optimizer, "fmin_l_bfgs_b"
+        if self.hyperparam_subset is not None and len(X) > self.hyperparam_subset:
+            # Laplace marginal-likelihood optimization is O(n^3) per step; select
+            # kernel hyperparameters on a stratified subset, then refit the
+            # posterior on all of X with those hyperparameters held fixed.
+            from sklearn.model_selection import train_test_split
+            idx, _ = train_test_split(np.arange(len(X)), train_size=self.hyperparam_subset,
+                                      stratify=y, random_state=self.random_state)
+            kernel = GaussianProcessClassifier(
+                kernel=kernel, n_restarts_optimizer=n_restarts, random_state=self.random_state,
+                max_iter_predict=self.max_iter_predict,
+            ).fit(X[idx], np.asarray(y)[idx]).kernel_
+            n_restarts, optimizer = 0, None
         self.gpc_ = GaussianProcessClassifier(
             kernel=kernel,
-            n_restarts_optimizer=self.n_restarts_optimizer,
+            optimizer=optimizer,
+            n_restarts_optimizer=n_restarts,
             random_state=self.random_state,
             max_iter_predict=self.max_iter_predict,
         )

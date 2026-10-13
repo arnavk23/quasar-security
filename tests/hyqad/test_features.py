@@ -18,11 +18,11 @@ def test_amplitude_encoding_normalization():
     assert np.allclose(norms, 1.0, atol=1e-12)
 
 
-def test_amplitude_encoding_padding():
-    encoder = AmplitudeEncoder(encoding_dim=8)
+def test_amplitude_encoding_never_truncates():
     X = np.random.randn(3, 10)
-    encoded = encoder.transform(X)
-    assert encoded.shape == (3, 8)
+    assert AmplitudeEncoder().transform(X).shape == (3, 16)
+    with pytest.raises(ValueError):
+        AmplitudeEncoder(encoding_dim=8).transform(X)
 
 
 def test_amplitude_encoding_single_row():
@@ -38,7 +38,8 @@ def test_amplitude_kernel():
     X2 = np.random.randn(3, 3)
     K = encoder.kernel(X1, X2)
     assert K.shape == (5, 3)
-    assert np.all(K >= 0)
+    assert np.all(K >= 0) and np.all(K <= 1 + 1e-12)
+    assert np.allclose(np.diag(encoder.kernel(X1, X1)), 1.0)
 
 
 def test_covariance_features_shape():
@@ -46,8 +47,25 @@ def test_covariance_features_shape():
     X = np.random.randn(50, 4)
     extractor.fit(X)
     features = extractor.transform(X)
-    n_expected = 4 + 4 + 1 + 1 + 1 + 1
-    assert features.shape == (50, n_expected)
+    assert features.shape == (50, 5)
+    assert np.allclose(features[:, :4], X)
+
+
+def test_covariance_features_are_order_independent():
+    rng = np.random.default_rng(0)
+    X = rng.normal(size=(60, 4))
+    extractor = CovarianceFeatureExtractor().fit(X)
+    perm = rng.permutation(60)
+    assert np.allclose(extractor.transform(X)[perm], extractor.transform(X[perm]))
+
+
+def test_covariance_fit_uses_normal_class_only():
+    rng = np.random.default_rng(0)
+    X = np.vstack([rng.normal(size=(100, 3)), rng.normal(5, 1, size=(30, 3))])
+    y = np.r_[np.zeros(100), np.ones(30)]
+    extractor = CovarianceFeatureExtractor().fit(X, y)
+    d = extractor.transform(X)[:, -1]
+    assert d[y == 1].mean() > 3 * d[y == 0].mean()
 
 
 def test_covariance_uncertainty_score():

@@ -6,7 +6,6 @@ from sklearn.preprocessing import StandardScaler
 
 from hyqad.models.hybrid_detector import HybridAnomalyDetector
 from hyqad.features.covariance_features import CovarianceFeatureExtractor
-from hyqad.features.amplitude_encoding import AmplitudeEncoder
 from hyqad.config import Config
 
 
@@ -34,13 +33,8 @@ class InferencePipeline:
         if self.config.features.use_covariance_features:
             cov = CovarianceFeatureExtractor(
                 smoothing=self.config.features.covariance_smoothing,
-                window=20,
             )
             steps.append(("cov_features", cov))
-
-        if self.config.features.use_amplitude_encoding:
-            amp = AmplitudeEncoder(encoding_dim=self.config.features.encoding_dim)
-            steps.append(("amplitude_encoding", amp))
 
         detector = HybridAnomalyDetector(
             use_bayesian=self.config.pipeline.use_bayesian_estimator,

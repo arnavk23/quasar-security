@@ -1,0 +1,481 @@
+seed,strength,held_out,features,model,auc
+0,1.0,pns,with Mahalanobis,AE-SVM,0.997632275132275
+0,1.0,pns,with Mahalanobis,AE-SVM (anchored),0.9997552910052909
+0,1.0,pns,with Mahalanobis,RBF-SVM,0.9997982804232804
+0,1.0,pns,without Mahalanobis,AE-SVM,0.8000462962962964
+0,1.0,pns,without Mahalanobis,AE-SVM (anchored),0.991276455026455
+0,1.0,pns,without Mahalanobis,RBF-SVM,0.9969543650793651
+1,1.0,pns,with Mahalanobis,AE-SVM,0.9946329365079366
+1,1.0,pns,with Mahalanobis,AE-SVM (anchored),0.9995701058201059
+1,1.0,pns,with Mahalanobis,RBF-SVM,0.9997784391534391
+1,1.0,pns,without Mahalanobis,AE-SVM,0.8642890211640211
+1,1.0,pns,without Mahalanobis,AE-SVM (anchored),0.9842526455026455
+1,1.0,pns,without Mahalanobis,RBF-SVM,0.9909325396825397
+2,1.0,pns,with Mahalanobis,AE-SVM,0.9962896825396825
+2,1.0,pns,with Mahalanobis,AE-SVM (anchored),0.9998710317460318
+2,1.0,pns,with Mahalanobis,RBF-SVM,0.9999570105820106
+2,1.0,pns,without Mahalanobis,AE-SVM,0.8483250661375661
+2,1.0,pns,without Mahalanobis,AE-SVM (anchored),0.9897354497354497
+2,1.0,pns,without Mahalanobis,RBF-SVM,0.9950396825396826
+3,1.0,pns,with Mahalanobis,AE-SVM,0.9959457671957671
+3,1.0,pns,with Mahalanobis,AE-SVM (anchored),0.999646164021164
+3,1.0,pns,with Mahalanobis,RBF-SVM,0.9998578042328042
+3,1.0,pns,without Mahalanobis,AE-SVM,0.8588244047619049
+3,1.0,pns,without Mahalanobis,AE-SVM (anchored),0.9952182539682539
+3,1.0,pns,without Mahalanobis,RBF-SVM,0.9967162698412698
+4,1.0,pns,with Mahalanobis,AE-SVM,0.9961739417989418
+4,1.0,pns,with Mahalanobis,AE-SVM (anchored),0.9999537037037037
+4,1.0,pns,with Mahalanobis,RBF-SVM,0.9999768518518519
+4,1.0,pns,without Mahalanobis,AE-SVM,0.8473677248677249
+4,1.0,pns,without Mahalanobis,AE-SVM (anchored),0.989212962962963
+4,1.0,pns,without Mahalanobis,RBF-SVM,0.9947255291005291
+5,1.0,pns,with Mahalanobis,AE-SVM,0.9974206349206349
+5,1.0,pns,with Mahalanobis,AE-SVM (anchored),0.999593253968254
+5,1.0,pns,with Mahalanobis,RBF-SVM,0.9998181216931217
+5,1.0,pns,without Mahalanobis,AE-SVM,0.9046957671957673
+5,1.0,pns,without Mahalanobis,AE-SVM (anchored),0.9970634920634921
+5,1.0,pns,without Mahalanobis,RBF-SVM,0.9985119047619048
+6,1.0,pns,with Mahalanobis,AE-SVM,0.9960085978835977
+6,1.0,pns,with Mahalanobis,AE-SVM (anchored),0.9997784391534392
+6,1.0,pns,with Mahalanobis,RBF-SVM,0.9999107142857143
+6,1.0,pns,without Mahalanobis,AE-SVM,0.8627910052910053
+6,1.0,pns,without Mahalanobis,AE-SVM (anchored),0.9933928571428572
+6,1.0,pns,without Mahalanobis,RBF-SVM,0.995704365079365
+7,1.0,pns,with Mahalanobis,AE-SVM,0.9964847883597884
+7,1.0,pns,with Mahalanobis,AE-SVM (anchored),0.9998710317460318
+7,1.0,pns,with Mahalanobis,RBF-SVM,0.9999305555555555
+7,1.0,pns,without Mahalanobis,AE-SVM,0.8653257275132276
+7,1.0,pns,without Mahalanobis,AE-SVM (anchored),0.9874057539682539
+7,1.0,pns,without Mahalanobis,RBF-SVM,0.9950066137566137
+8,1.0,pns,with Mahalanobis,AE-SVM,0.9968353174603175
+8,1.0,pns,with Mahalanobis,AE-SVM (anchored),0.9999007936507937
+8,1.0,pns,with Mahalanobis,RBF-SVM,0.9999801587301588
+8,1.0,pns,without Mahalanobis,AE-SVM,0.8181150793650793
+8,1.0,pns,without Mahalanobis,AE-SVM (anchored),0.9885648148148148
+8,1.0,pns,without Mahalanobis,RBF-SVM,0.990952380952381
+9,1.0,pns,with Mahalanobis,AE-SVM,0.9922156084656085
+9,1.0,pns,with Mahalanobis,AE-SVM (anchored),0.9996097883597883
+9,1.0,pns,with Mahalanobis,RBF-SVM,0.9998842592592593
+9,1.0,pns,without Mahalanobis,AE-SVM,0.772691798941799
+9,1.0,pns,without Mahalanobis,AE-SVM (anchored),0.9800330687830687
+9,1.0,pns,without Mahalanobis,RBF-SVM,0.9913128306878307
+0,1.0,detector_blinding,with Mahalanobis,AE-SVM,0.9837400793650793
+0,1.0,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9995552248677249
+0,1.0,detector_blinding,with Mahalanobis,RBF-SVM,1.0
+0,1.0,detector_blinding,without Mahalanobis,AE-SVM,0.13537698412698412
+0,1.0,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9605125661375662
+0,1.0,detector_blinding,without Mahalanobis,RBF-SVM,0.9916666666666667
+1,1.0,detector_blinding,with Mahalanobis,AE-SVM,0.9850231481481482
+1,1.0,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9979282407407407
+1,1.0,detector_blinding,with Mahalanobis,RBF-SVM,1.0
+1,1.0,detector_blinding,without Mahalanobis,AE-SVM,0.12790674603174604
+1,1.0,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.968941798941799
+1,1.0,detector_blinding,without Mahalanobis,RBF-SVM,0.9880952380952381
+2,1.0,detector_blinding,with Mahalanobis,AE-SVM,0.9891666666666666
+2,1.0,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9998710317460318
+2,1.0,detector_blinding,with Mahalanobis,RBF-SVM,1.0
+2,1.0,detector_blinding,without Mahalanobis,AE-SVM,0.10026455026455025
+2,1.0,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9813392857142857
+2,1.0,detector_blinding,without Mahalanobis,RBF-SVM,0.9976190476190476
+3,1.0,detector_blinding,with Mahalanobis,AE-SVM,0.9913789682539682
+3,1.0,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9995998677248678
+3,1.0,detector_blinding,with Mahalanobis,RBF-SVM,1.0
+3,1.0,detector_blinding,without Mahalanobis,AE-SVM,0.23089947089947094
+3,1.0,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9897751322751323
+3,1.0,detector_blinding,without Mahalanobis,RBF-SVM,0.9928571428571429
+4,1.0,detector_blinding,with Mahalanobis,AE-SVM,0.9906481481481482
+4,1.0,detector_blinding,with Mahalanobis,AE-SVM (anchored),1.0
+4,1.0,detector_blinding,with Mahalanobis,RBF-SVM,1.0
+4,1.0,detector_blinding,without Mahalanobis,AE-SVM,0.07733134920634921
+4,1.0,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9906481481481481
+4,1.0,detector_blinding,without Mahalanobis,RBF-SVM,0.9976190476190476
+5,1.0,detector_blinding,with Mahalanobis,AE-SVM,0.9921197089947089
+5,1.0,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9998280423280423
+5,1.0,detector_blinding,with Mahalanobis,RBF-SVM,0.9992956349206349
+5,1.0,detector_blinding,without Mahalanobis,AE-SVM,0.108125
+5,1.0,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9781911375661375
+5,1.0,detector_blinding,without Mahalanobis,RBF-SVM,0.9964285714285714
+6,1.0,detector_blinding,with Mahalanobis,AE-SVM,0.983994708994709
+6,1.0,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9999041005291005
+6,1.0,detector_blinding,with Mahalanobis,RBF-SVM,1.0
+6,1.0,detector_blinding,without Mahalanobis,AE-SVM,0.26671626984126984
+6,1.0,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9525066137566137
+6,1.0,detector_blinding,without Mahalanobis,RBF-SVM,0.9928571428571429
+7,1.0,detector_blinding,with Mahalanobis,AE-SVM,0.9902513227513228
+7,1.0,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9999074074074075
+7,1.0,detector_blinding,with Mahalanobis,RBF-SVM,1.0
+7,1.0,detector_blinding,without Mahalanobis,AE-SVM,0.07945436507936508
+7,1.0,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9767592592592593
+7,1.0,detector_blinding,without Mahalanobis,RBF-SVM,0.9976190476190476
+8,1.0,detector_blinding,with Mahalanobis,AE-SVM,0.9940806878306878
+8,1.0,detector_blinding,with Mahalanobis,AE-SVM (anchored),1.0
+8,1.0,detector_blinding,with Mahalanobis,RBF-SVM,1.0
+8,1.0,detector_blinding,without Mahalanobis,AE-SVM,0.14554894179894182
+8,1.0,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.973207671957672
+8,1.0,detector_blinding,without Mahalanobis,RBF-SVM,0.9940476190476191
+9,1.0,detector_blinding,with Mahalanobis,AE-SVM,0.9923478835978836
+9,1.0,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9999603174603174
+9,1.0,detector_blinding,with Mahalanobis,RBF-SVM,0.9994179894179894
+9,1.0,detector_blinding,without Mahalanobis,AE-SVM,0.07284060846560847
+9,1.0,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9685813492063493
+9,1.0,detector_blinding,without Mahalanobis,RBF-SVM,0.9904761904761905
+0,1.0,trojan_horse,with Mahalanobis,AE-SVM,0.9875314153439152
+0,1.0,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.9907407407407407
+0,1.0,trojan_horse,with Mahalanobis,RBF-SVM,0.9935813492063491
+0,1.0,trojan_horse,without Mahalanobis,AE-SVM,0.5599503968253967
+0,1.0,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.9306283068783069
+0,1.0,trojan_horse,without Mahalanobis,RBF-SVM,0.9399305555555557
+1,1.0,trojan_horse,with Mahalanobis,AE-SVM,0.9891187169312169
+1,1.0,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.992199074074074
+1,1.0,trojan_horse,with Mahalanobis,RBF-SVM,0.9939451058201059
+1,1.0,trojan_horse,without Mahalanobis,AE-SVM,0.661954365079365
+1,1.0,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.9506150793650793
+1,1.0,trojan_horse,without Mahalanobis,RBF-SVM,0.9630092592592592
+2,1.0,trojan_horse,with Mahalanobis,AE-SVM,0.9939153439153439
+2,1.0,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.996577380952381
+2,1.0,trojan_horse,with Mahalanobis,RBF-SVM,0.9978802910052911
+2,1.0,trojan_horse,without Mahalanobis,AE-SVM,0.6548346560846561
+2,1.0,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.9679828042328043
+2,1.0,trojan_horse,without Mahalanobis,RBF-SVM,0.9743452380952381
+3,1.0,trojan_horse,with Mahalanobis,AE-SVM,0.987051917989418
+3,1.0,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.9920734126984126
+3,1.0,trojan_horse,with Mahalanobis,RBF-SVM,0.9929927248677249
+3,1.0,trojan_horse,without Mahalanobis,AE-SVM,0.5273677248677249
+3,1.0,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.9460449735449736
+3,1.0,trojan_horse,without Mahalanobis,RBF-SVM,0.9477645502645503
+4,1.0,trojan_horse,with Mahalanobis,AE-SVM,0.9870337301587302
+4,1.0,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.992473544973545
+4,1.0,trojan_horse,with Mahalanobis,RBF-SVM,0.9939715608465609
+4,1.0,trojan_horse,without Mahalanobis,AE-SVM,0.5904497354497354
+4,1.0,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.9651256613756615
+4,1.0,trojan_horse,without Mahalanobis,RBF-SVM,0.9575661375661375
+5,1.0,trojan_horse,with Mahalanobis,AE-SVM,0.9896428571428572
+5,1.0,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.9935251322751324
+5,1.0,trojan_horse,with Mahalanobis,RBF-SVM,0.9956316137566137
+5,1.0,trojan_horse,without Mahalanobis,AE-SVM,0.5457638888888889
+5,1.0,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.956630291005291
+5,1.0,trojan_horse,without Mahalanobis,RBF-SVM,0.9622156084656084
+6,1.0,trojan_horse,with Mahalanobis,AE-SVM,0.9891782407407407
+6,1.0,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.9924636243386243
+6,1.0,trojan_horse,with Mahalanobis,RBF-SVM,0.9948941798941799
+6,1.0,trojan_horse,without Mahalanobis,AE-SVM,0.5715145502645503
+6,1.0,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.9497883597883597
+6,1.0,trojan_horse,without Mahalanobis,RBF-SVM,0.9554431216931217
+7,1.0,trojan_horse,with Mahalanobis,AE-SVM,0.9901041666666667
+7,1.0,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.9912169312169313
+7,1.0,trojan_horse,with Mahalanobis,RBF-SVM,0.9935846560846561
+7,1.0,trojan_horse,without Mahalanobis,AE-SVM,0.6466402116402117
+7,1.0,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.9667791005291005
+7,1.0,trojan_horse,without Mahalanobis,RBF-SVM,0.9692261904761904
+8,1.0,trojan_horse,with Mahalanobis,AE-SVM,0.9926388888888888
+8,1.0,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.9965972222222222
+8,1.0,trojan_horse,with Mahalanobis,RBF-SVM,0.9975165343915344
+8,1.0,trojan_horse,without Mahalanobis,AE-SVM,0.7055357142857144
+8,1.0,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.9803472222222223
+8,1.0,trojan_horse,without Mahalanobis,RBF-SVM,0.9838492063492064
+9,1.0,trojan_horse,with Mahalanobis,AE-SVM,0.9914054232804232
+9,1.0,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.9929298941798942
+9,1.0,trojan_horse,with Mahalanobis,RBF-SVM,0.9945171957671958
+9,1.0,trojan_horse,without Mahalanobis,AE-SVM,0.6915740740740741
+9,1.0,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.9604431216931216
+9,1.0,trojan_horse,without Mahalanobis,RBF-SVM,0.9672519841269842
+0,1.0,intercept_resend,with Mahalanobis,AE-SVM,1.0
+0,1.0,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+0,1.0,intercept_resend,with Mahalanobis,RBF-SVM,1.0
+0,1.0,intercept_resend,without Mahalanobis,AE-SVM,0.9649007936507936
+0,1.0,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9999867724867725
+0,1.0,intercept_resend,without Mahalanobis,RBF-SVM,0.9995138888888889
+1,1.0,intercept_resend,with Mahalanobis,AE-SVM,1.0
+1,1.0,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+1,1.0,intercept_resend,with Mahalanobis,RBF-SVM,0.9998048941798942
+1,1.0,intercept_resend,without Mahalanobis,AE-SVM,0.9545138888888889
+1,1.0,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9999537037037037
+1,1.0,intercept_resend,without Mahalanobis,RBF-SVM,0.9982308201058201
+2,1.0,intercept_resend,with Mahalanobis,AE-SVM,1.0
+2,1.0,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+2,1.0,intercept_resend,with Mahalanobis,RBF-SVM,1.0
+2,1.0,intercept_resend,without Mahalanobis,AE-SVM,0.940218253968254
+2,1.0,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9998842592592593
+2,1.0,intercept_resend,without Mahalanobis,RBF-SVM,0.9994080687830688
+3,1.0,intercept_resend,with Mahalanobis,AE-SVM,0.9999966931216931
+3,1.0,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+3,1.0,intercept_resend,with Mahalanobis,RBF-SVM,0.9997883597883598
+3,1.0,intercept_resend,without Mahalanobis,AE-SVM,0.9786805555555556
+3,1.0,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9998445767195767
+3,1.0,intercept_resend,without Mahalanobis,RBF-SVM,0.9987830687830688
+4,1.0,intercept_resend,with Mahalanobis,AE-SVM,1.0
+4,1.0,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+4,1.0,intercept_resend,with Mahalanobis,RBF-SVM,1.0
+4,1.0,intercept_resend,without Mahalanobis,AE-SVM,0.9412599206349206
+4,1.0,intercept_resend,without Mahalanobis,AE-SVM (anchored),1.0
+4,1.0,intercept_resend,without Mahalanobis,RBF-SVM,0.9994742063492064
+5,1.0,intercept_resend,with Mahalanobis,AE-SVM,1.0
+5,1.0,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+5,1.0,intercept_resend,with Mahalanobis,RBF-SVM,0.9988128306878307
+5,1.0,intercept_resend,without Mahalanobis,AE-SVM,0.975492724867725
+5,1.0,intercept_resend,without Mahalanobis,AE-SVM (anchored),1.0
+5,1.0,intercept_resend,without Mahalanobis,RBF-SVM,1.0
+6,1.0,intercept_resend,with Mahalanobis,AE-SVM,1.0
+6,1.0,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+6,1.0,intercept_resend,with Mahalanobis,RBF-SVM,1.0
+6,1.0,intercept_resend,without Mahalanobis,AE-SVM,0.9173511904761905
+6,1.0,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9999966931216931
+6,1.0,intercept_resend,without Mahalanobis,RBF-SVM,0.9994907407407407
+7,1.0,intercept_resend,with Mahalanobis,AE-SVM,1.0
+7,1.0,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+7,1.0,intercept_resend,with Mahalanobis,RBF-SVM,1.0
+7,1.0,intercept_resend,without Mahalanobis,AE-SVM,0.9292179232804232
+7,1.0,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9999933862433863
+7,1.0,intercept_resend,without Mahalanobis,RBF-SVM,0.999292328042328
+8,1.0,intercept_resend,with Mahalanobis,AE-SVM,1.0
+8,1.0,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+8,1.0,intercept_resend,with Mahalanobis,RBF-SVM,1.0
+8,1.0,intercept_resend,without Mahalanobis,AE-SVM,0.9332374338624339
+8,1.0,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9999966931216931
+8,1.0,intercept_resend,without Mahalanobis,RBF-SVM,0.9995667989417989
+9,1.0,intercept_resend,with Mahalanobis,AE-SVM,1.0
+9,1.0,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+9,1.0,intercept_resend,with Mahalanobis,RBF-SVM,0.9989021164021165
+9,1.0,intercept_resend,without Mahalanobis,AE-SVM,0.9037830687830687
+9,1.0,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9999801587301588
+9,1.0,intercept_resend,without Mahalanobis,RBF-SVM,0.9992791005291005
+0,0.3,pns,with Mahalanobis,AE-SVM,0.9566402116402117
+0,0.3,pns,with Mahalanobis,AE-SVM (anchored),0.9589351851851853
+0,0.3,pns,with Mahalanobis,RBF-SVM,0.9576818783068782
+0,0.3,pns,without Mahalanobis,AE-SVM,0.5576421957671958
+0,0.3,pns,without Mahalanobis,AE-SVM (anchored),0.9507738095238096
+0,0.3,pns,without Mahalanobis,RBF-SVM,0.9503604497354498
+1,0.3,pns,with Mahalanobis,AE-SVM,0.9367328042328043
+1,0.3,pns,with Mahalanobis,AE-SVM (anchored),0.949318783068783
+1,0.3,pns,with Mahalanobis,RBF-SVM,0.9498478835978836
+1,0.3,pns,without Mahalanobis,AE-SVM,0.5055175264550265
+1,0.3,pns,without Mahalanobis,AE-SVM (anchored),0.9347635582010583
+1,0.3,pns,without Mahalanobis,RBF-SVM,0.9433300264550264
+2,0.3,pns,with Mahalanobis,AE-SVM,0.9538492063492063
+2,0.3,pns,with Mahalanobis,AE-SVM (anchored),0.9523148148148147
+2,0.3,pns,with Mahalanobis,RBF-SVM,0.9481878306878307
+2,0.3,pns,without Mahalanobis,AE-SVM,0.5686408730158731
+2,0.3,pns,without Mahalanobis,AE-SVM (anchored),0.9454365079365079
+2,0.3,pns,without Mahalanobis,RBF-SVM,0.944728835978836
+3,0.3,pns,with Mahalanobis,AE-SVM,0.9563789682539682
+3,0.3,pns,with Mahalanobis,AE-SVM (anchored),0.957123015873016
+3,0.3,pns,with Mahalanobis,RBF-SVM,0.9527513227513227
+3,0.3,pns,without Mahalanobis,AE-SVM,0.5381679894179894
+3,0.3,pns,without Mahalanobis,AE-SVM (anchored),0.9496296296296296
+3,0.3,pns,without Mahalanobis,RBF-SVM,0.9474074074074075
+4,0.3,pns,with Mahalanobis,AE-SVM,0.9585714285714285
+4,0.3,pns,with Mahalanobis,AE-SVM (anchored),0.960380291005291
+4,0.3,pns,with Mahalanobis,RBF-SVM,0.9610085978835979
+4,0.3,pns,without Mahalanobis,AE-SVM,0.5593171296296297
+4,0.3,pns,without Mahalanobis,AE-SVM (anchored),0.9598032407407407
+4,0.3,pns,without Mahalanobis,RBF-SVM,0.9609623015873016
+5,0.3,pns,with Mahalanobis,AE-SVM,0.9592691798941799
+5,0.3,pns,with Mahalanobis,AE-SVM (anchored),0.9604034391534392
+5,0.3,pns,with Mahalanobis,RBF-SVM,0.9591898148148148
+5,0.3,pns,without Mahalanobis,AE-SVM,0.4928042328042328
+5,0.3,pns,without Mahalanobis,AE-SVM (anchored),0.9656712962962962
+5,0.3,pns,without Mahalanobis,RBF-SVM,0.964457671957672
+6,0.3,pns,with Mahalanobis,AE-SVM,0.9441501322751322
+6,0.3,pns,with Mahalanobis,AE-SVM (anchored),0.949036044973545
+6,0.3,pns,with Mahalanobis,RBF-SVM,0.946385582010582
+6,0.3,pns,without Mahalanobis,AE-SVM,0.6197619047619047
+6,0.3,pns,without Mahalanobis,AE-SVM (anchored),0.9420221560846561
+6,0.3,pns,without Mahalanobis,RBF-SVM,0.9423710317460317
+7,0.3,pns,with Mahalanobis,AE-SVM,0.9442245370370371
+7,0.3,pns,with Mahalanobis,AE-SVM (anchored),0.9419642857142858
+7,0.3,pns,with Mahalanobis,RBF-SVM,0.9447420634920636
+7,0.3,pns,without Mahalanobis,AE-SVM,0.5755919312169313
+7,0.3,pns,without Mahalanobis,AE-SVM (anchored),0.9472833994708995
+7,0.3,pns,without Mahalanobis,RBF-SVM,0.948463955026455
+8,0.3,pns,with Mahalanobis,AE-SVM,0.9462334656084658
+8,0.3,pns,with Mahalanobis,AE-SVM (anchored),0.9508664021164022
+8,0.3,pns,with Mahalanobis,RBF-SVM,0.9527943121693122
+8,0.3,pns,without Mahalanobis,AE-SVM,0.5328902116402117
+8,0.3,pns,without Mahalanobis,AE-SVM (anchored),0.9477513227513228
+8,0.3,pns,without Mahalanobis,RBF-SVM,0.9488806216931217
+9,0.3,pns,with Mahalanobis,AE-SVM,0.9481646825396826
+9,0.3,pns,with Mahalanobis,AE-SVM (anchored),0.957526455026455
+9,0.3,pns,with Mahalanobis,RBF-SVM,0.9584656084656085
+9,0.3,pns,without Mahalanobis,AE-SVM,0.42100198412698414
+9,0.3,pns,without Mahalanobis,AE-SVM (anchored),0.9429431216931218
+9,0.3,pns,without Mahalanobis,RBF-SVM,0.9424503968253969
+0,0.3,detector_blinding,with Mahalanobis,AE-SVM,0.9649520502645502
+0,0.3,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9658300264550264
+0,0.3,detector_blinding,with Mahalanobis,RBF-SVM,0.8982572751322753
+0,0.3,detector_blinding,without Mahalanobis,AE-SVM,0.20010912698412697
+0,0.3,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.90630291005291
+0,0.3,detector_blinding,without Mahalanobis,RBF-SVM,0.9295767195767196
+1,0.3,detector_blinding,with Mahalanobis,AE-SVM,0.9787962962962963
+1,0.3,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9856349206349206
+1,0.3,detector_blinding,with Mahalanobis,RBF-SVM,0.9020816798941799
+1,0.3,detector_blinding,without Mahalanobis,AE-SVM,0.19134589947089947
+1,0.3,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9323578042328041
+1,0.3,detector_blinding,without Mahalanobis,RBF-SVM,0.9276256613756614
+2,0.3,detector_blinding,with Mahalanobis,AE-SVM,0.9652810846560846
+2,0.3,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9644874338624339
+2,0.3,detector_blinding,with Mahalanobis,RBF-SVM,0.8875281084656085
+2,0.3,detector_blinding,without Mahalanobis,AE-SVM,0.22446759259259258
+2,0.3,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9419312169312168
+2,0.3,detector_blinding,without Mahalanobis,RBF-SVM,0.9370717592592592
+3,0.3,detector_blinding,with Mahalanobis,AE-SVM,0.9704249338624338
+3,0.3,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9837996031746031
+3,0.3,detector_blinding,with Mahalanobis,RBF-SVM,0.9265707671957671
+3,0.3,detector_blinding,without Mahalanobis,AE-SVM,0.2861044973544974
+3,0.3,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9503637566137565
+3,0.3,detector_blinding,without Mahalanobis,RBF-SVM,0.9372255291005291
+4,0.3,detector_blinding,with Mahalanobis,AE-SVM,0.9766716269841269
+4,0.3,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.978900462962963
+4,0.3,detector_blinding,with Mahalanobis,RBF-SVM,0.8449421296296297
+4,0.3,detector_blinding,without Mahalanobis,AE-SVM,0.25023809523809526
+4,0.3,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9700727513227513
+4,0.3,detector_blinding,without Mahalanobis,RBF-SVM,0.950583664021164
+5,0.3,detector_blinding,with Mahalanobis,AE-SVM,0.9680720899470899
+5,0.3,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9509656084656085
+5,0.3,detector_blinding,with Mahalanobis,RBF-SVM,0.8707655423280423
+5,0.3,detector_blinding,without Mahalanobis,AE-SVM,0.20571097883597886
+5,0.3,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.8750033068783069
+5,0.3,detector_blinding,without Mahalanobis,RBF-SVM,0.9337632275132275
+6,0.3,detector_blinding,with Mahalanobis,AE-SVM,0.9738624338624339
+6,0.3,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9630390211640212
+6,0.3,detector_blinding,with Mahalanobis,RBF-SVM,0.8613343253968253
+6,0.3,detector_blinding,without Mahalanobis,AE-SVM,0.4314087301587301
+6,0.3,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9354133597883599
+6,0.3,detector_blinding,without Mahalanobis,RBF-SVM,0.9309821428571429
+7,0.3,detector_blinding,with Mahalanobis,AE-SVM,0.9749239417989418
+7,0.3,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9797784391534391
+7,0.3,detector_blinding,with Mahalanobis,RBF-SVM,0.9261375661375661
+7,0.3,detector_blinding,without Mahalanobis,AE-SVM,0.08127645502645502
+7,0.3,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9596527777777778
+7,0.3,detector_blinding,without Mahalanobis,RBF-SVM,0.947853835978836
+8,0.3,detector_blinding,with Mahalanobis,AE-SVM,0.9694907407407408
+8,0.3,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9603141534391534
+8,0.3,detector_blinding,with Mahalanobis,RBF-SVM,0.8378571428571429
+8,0.3,detector_blinding,without Mahalanobis,AE-SVM,0.20107473544973548
+8,0.3,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.9364434523809524
+8,0.3,detector_blinding,without Mahalanobis,RBF-SVM,0.9278604497354497
+9,0.3,detector_blinding,with Mahalanobis,AE-SVM,0.9625512566137566
+9,0.3,detector_blinding,with Mahalanobis,AE-SVM (anchored),0.9490608465608465
+9,0.3,detector_blinding,with Mahalanobis,RBF-SVM,0.8594890873015872
+9,0.3,detector_blinding,without Mahalanobis,AE-SVM,0.10132275132275133
+9,0.3,detector_blinding,without Mahalanobis,AE-SVM (anchored),0.8517741402116401
+9,0.3,detector_blinding,without Mahalanobis,RBF-SVM,0.9226289682539682
+0,0.3,trojan_horse,with Mahalanobis,AE-SVM,0.8643055555555555
+0,0.3,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.8529199735449735
+0,0.3,trojan_horse,with Mahalanobis,RBF-SVM,0.8333465608465609
+0,0.3,trojan_horse,without Mahalanobis,AE-SVM,0.45926752645502644
+0,0.3,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.8679414682539683
+0,0.3,trojan_horse,without Mahalanobis,RBF-SVM,0.8812863756613757
+1,0.3,trojan_horse,with Mahalanobis,AE-SVM,0.8663161375661377
+1,0.3,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.864699074074074
+1,0.3,trojan_horse,with Mahalanobis,RBF-SVM,0.8539914021164021
+1,0.3,trojan_horse,without Mahalanobis,AE-SVM,0.4897453703703704
+1,0.3,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.8605456349206348
+1,0.3,trojan_horse,without Mahalanobis,RBF-SVM,0.8681382275132276
+2,0.3,trojan_horse,with Mahalanobis,AE-SVM,0.9171990740740742
+2,0.3,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.9062400793650792
+2,0.3,trojan_horse,with Mahalanobis,RBF-SVM,0.8924768518518518
+2,0.3,trojan_horse,without Mahalanobis,AE-SVM,0.5035879629629629
+2,0.3,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.9197023809523809
+2,0.3,trojan_horse,without Mahalanobis,RBF-SVM,0.9194576719576719
+3,0.3,trojan_horse,with Mahalanobis,AE-SVM,0.8881481481481481
+3,0.3,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.8797387566137566
+3,0.3,trojan_horse,with Mahalanobis,RBF-SVM,0.858128306878307
+3,0.3,trojan_horse,without Mahalanobis,AE-SVM,0.46026455026455027
+3,0.3,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.8831084656084656
+3,0.3,trojan_horse,without Mahalanobis,RBF-SVM,0.8882242063492065
+4,0.3,trojan_horse,with Mahalanobis,AE-SVM,0.8893948412698411
+4,0.3,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.8777976190476191
+4,0.3,trojan_horse,with Mahalanobis,RBF-SVM,0.8619907407407407
+4,0.3,trojan_horse,without Mahalanobis,AE-SVM,0.486317791005291
+4,0.3,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.8888095238095238
+4,0.3,trojan_horse,without Mahalanobis,RBF-SVM,0.8874685846560846
+5,0.3,trojan_horse,with Mahalanobis,AE-SVM,0.8835879629629629
+5,0.3,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.8684424603174602
+5,0.3,trojan_horse,with Mahalanobis,RBF-SVM,0.8501190476190477
+5,0.3,trojan_horse,without Mahalanobis,AE-SVM,0.46920965608465615
+5,0.3,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.8812896825396825
+5,0.3,trojan_horse,without Mahalanobis,RBF-SVM,0.8827992724867725
+6,0.3,trojan_horse,with Mahalanobis,AE-SVM,0.8769708994708993
+6,0.3,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.8687070105820106
+6,0.3,trojan_horse,with Mahalanobis,RBF-SVM,0.8504993386243387
+6,0.3,trojan_horse,without Mahalanobis,AE-SVM,0.46860945767195766
+6,0.3,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.8694973544973545
+6,0.3,trojan_horse,without Mahalanobis,RBF-SVM,0.87599041005291
+7,0.3,trojan_horse,with Mahalanobis,AE-SVM,0.8783151455026454
+7,0.3,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.856792328042328
+7,0.3,trojan_horse,with Mahalanobis,RBF-SVM,0.842037037037037
+7,0.3,trojan_horse,without Mahalanobis,AE-SVM,0.4931861772486773
+7,0.3,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.86817791005291
+7,0.3,trojan_horse,without Mahalanobis,RBF-SVM,0.8801851851851853
+8,0.3,trojan_horse,with Mahalanobis,AE-SVM,0.9029563492063493
+8,0.3,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.8850628306878306
+8,0.3,trojan_horse,with Mahalanobis,RBF-SVM,0.8676058201058201
+8,0.3,trojan_horse,without Mahalanobis,AE-SVM,0.5317576058201059
+8,0.3,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.8783349867724868
+8,0.3,trojan_horse,without Mahalanobis,RBF-SVM,0.8913673941798942
+9,0.3,trojan_horse,with Mahalanobis,AE-SVM,0.8886524470899472
+9,0.3,trojan_horse,with Mahalanobis,AE-SVM (anchored),0.8662334656084656
+9,0.3,trojan_horse,with Mahalanobis,RBF-SVM,0.8524537037037037
+9,0.3,trojan_horse,without Mahalanobis,AE-SVM,0.4520304232804232
+9,0.3,trojan_horse,without Mahalanobis,AE-SVM (anchored),0.8789847883597883
+9,0.3,trojan_horse,without Mahalanobis,RBF-SVM,0.8890558862433862
+0,0.3,intercept_resend,with Mahalanobis,AE-SVM,1.0
+0,0.3,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+0,0.3,intercept_resend,with Mahalanobis,RBF-SVM,0.9784722222222222
+0,0.3,intercept_resend,without Mahalanobis,AE-SVM,0.9850297619047619
+0,0.3,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9999338624338624
+0,0.3,intercept_resend,without Mahalanobis,RBF-SVM,0.9926421957671958
+1,0.3,intercept_resend,with Mahalanobis,AE-SVM,0.9999768518518518
+1,0.3,intercept_resend,with Mahalanobis,AE-SVM (anchored),0.9998148148148148
+1,0.3,intercept_resend,with Mahalanobis,RBF-SVM,0.9642410714285714
+1,0.3,intercept_resend,without Mahalanobis,AE-SVM,0.9879133597883598
+1,0.3,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9993121693121693
+1,0.3,intercept_resend,without Mahalanobis,RBF-SVM,0.9864715608465608
+2,0.3,intercept_resend,with Mahalanobis,AE-SVM,1.0
+2,0.3,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+2,0.3,intercept_resend,with Mahalanobis,RBF-SVM,0.9849454365079365
+2,0.3,intercept_resend,without Mahalanobis,AE-SVM,0.9862549603174603
+2,0.3,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9998677248677249
+2,0.3,intercept_resend,without Mahalanobis,RBF-SVM,0.9890873015873016
+3,0.3,intercept_resend,with Mahalanobis,AE-SVM,1.0
+3,0.3,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+3,0.3,intercept_resend,with Mahalanobis,RBF-SVM,0.9843055555555554
+3,0.3,intercept_resend,without Mahalanobis,AE-SVM,0.9919675925925926
+3,0.3,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9999933862433863
+3,0.3,intercept_resend,without Mahalanobis,RBF-SVM,0.9909391534391534
+4,0.3,intercept_resend,with Mahalanobis,AE-SVM,1.0
+4,0.3,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+4,0.3,intercept_resend,with Mahalanobis,RBF-SVM,0.9808597883597884
+4,0.3,intercept_resend,without Mahalanobis,AE-SVM,0.9851554232804232
+4,0.3,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9999966931216931
+4,0.3,intercept_resend,without Mahalanobis,RBF-SVM,0.9917956349206349
+5,0.3,intercept_resend,with Mahalanobis,AE-SVM,1.0
+5,0.3,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+5,0.3,intercept_resend,with Mahalanobis,RBF-SVM,0.9816898148148148
+5,0.3,intercept_resend,without Mahalanobis,AE-SVM,0.9876537698412697
+5,0.3,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9999867724867726
+5,0.3,intercept_resend,without Mahalanobis,RBF-SVM,0.9877215608465609
+6,0.3,intercept_resend,with Mahalanobis,AE-SVM,1.0
+6,0.3,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+6,0.3,intercept_resend,with Mahalanobis,RBF-SVM,0.9807870370370371
+6,0.3,intercept_resend,without Mahalanobis,AE-SVM,0.9642857142857143
+6,0.3,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9998611111111111
+6,0.3,intercept_resend,without Mahalanobis,RBF-SVM,0.9906944444444444
+7,0.3,intercept_resend,with Mahalanobis,AE-SVM,1.0
+7,0.3,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+7,0.3,intercept_resend,with Mahalanobis,RBF-SVM,0.9816253306878306
+7,0.3,intercept_resend,without Mahalanobis,AE-SVM,0.983723544973545
+7,0.3,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.999973544973545
+7,0.3,intercept_resend,without Mahalanobis,RBF-SVM,0.9924404761904762
+8,0.3,intercept_resend,with Mahalanobis,AE-SVM,1.0
+8,0.3,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+8,0.3,intercept_resend,with Mahalanobis,RBF-SVM,0.9745618386243386
+8,0.3,intercept_resend,without Mahalanobis,AE-SVM,0.9775181878306878
+8,0.3,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9998015873015873
+8,0.3,intercept_resend,without Mahalanobis,RBF-SVM,0.9865310846560846
+9,0.3,intercept_resend,with Mahalanobis,AE-SVM,1.0
+9,0.3,intercept_resend,with Mahalanobis,AE-SVM (anchored),1.0
+9,0.3,intercept_resend,with Mahalanobis,RBF-SVM,0.978478835978836
+9,0.3,intercept_resend,without Mahalanobis,AE-SVM,0.9605390211640212
+9,0.3,intercept_resend,without Mahalanobis,AE-SVM (anchored),0.9999503968253969
+9,0.3,intercept_resend,without Mahalanobis,RBF-SVM,0.9896494708994709
