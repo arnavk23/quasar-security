@@ -263,6 +263,109 @@ def fill_qztna(d):
     return out
 
 
+def fill_hyqad(d):
+    """Tables for papers/hyqad/paper.template.tex (no semicolons in output)."""
+    out = {}
+    hy = d["hy"]
+    ATT = ["pns", "detector_blinding", "trojan_horse", "intercept_resend"]
+    ATT_L = {"pns": "PNS", "detector_blinding": "Blinding", "trojan_horse": "Trojan", "intercept_resend": "Int.-res."}
+
+    # detection at n = 1400
+    sup = ["RF", "RF-isotonic", "Hybrid", "RBF-SVM", "GP", "AE-SVM", "AE-SVM (anchored)"]
+    nov = ["OC-SVM", "IF", "LOF"]
+    best = {(st, m): hy[(hy.strength == st) & hy.model.isin(sup)].groupby("model")[m].mean()
+            for st in (1.0, 0.3) for m in ("mcc", "auc", "ece")}
+    rows = []
+    for name in sup + nov:
+        if name == "OC-SVM":
+            rows.append(r"    \midrule")
+        cells = []
+        for st in (1.0, 0.3):
+            r = hy[(hy.model == name) & (hy.strength == st)]
+            for m, better in (("mcc", max), ("auc", max), ("ece", min)):
+                if r.empty or r[m].isna().all():
+                    cells.append("--")
+                    continue
+                b = better(best[(st, m)]) if name in sup else None
+                bold = b is not None and abs(r[m].mean() - b) < 5e-4
+                cells.append(cell(r[m], bold=bold) if m == "mcc" else
+                             (f"$\\mathbf{{{r[m].mean():.3f}}}$" if bold else f"${r[m].mean():.3f}$"))
+        rows.append(f"    {name} & " + " & ".join(cells) + r" \\")
+    out["HY_T_BENCH"] = "\n".join(rows)
+
+    # matched n (MCC)
+    mn = pd.read_csv(HY / "matched_n.csv").groupby(["strength", "n_train", "model"]).mcc.mean().unstack()
+    ns = [25, 100, 500, 1400]
+    rows = []
+    for st in (1.0, 0.3):
+        for name in ["AE-SVM", "RBF-SVM", "GP", "RF", "Hybrid"]:
+            rows.append(f"    {st:g} & {name} & " + " & ".join(f"${mn.loc[(st, n), name]:.3f}$" for n in ns) + r" \\")
+        if st == 1.0:
+            rows.append(r"    \midrule")
+    out["HY_T_MATCHED"] = "\n".join(rows)
+
+    # attack strength (MCC) and GP recall per attack
+    ss = pd.read_csv(HY / "strength_sweep.csv")
+    sv = ss[ss.attack == "all"].groupby(["model", "strength"]).mcc.mean().unstack()
+    strengths = [0.05, 0.1, 0.2, 0.3, 0.5, 1.0]
+    rows = [f"    {m} & " + " & ".join(f"${sv.loc[m, x]:.2f}$" for x in strengths) + r" \\"
+            for m in ["AE-SVM", "RBF-SVM", "GP", "RF"]]
+    rec = ss[(ss.attack != "all") & (ss.model == "GP")].groupby(["attack", "strength"]).recall.mean().unstack()
+    rows.append(r"    \midrule")
+    rows += [f"    GP recall, {ATT_L[a]} & " + " & ".join(f"${rec.loc[a, x]:.2f}$" for x in strengths) + r" \\"
+             for a in ATT]
+    out["HY_T_STRENGTH"] = "\n".join(rows)
+
+    # zero-day per attack at s = 0.3, plus Mahalanobis ablation
+    z = pd.read_csv(HY / "zeroday.csv")
+    z3 = z[z.strength == 0.3].groupby(["model", "held_out"]).auc.mean().unstack()
+    ab = pd.read_csv(HY / "zeroday_mahal_ablation.csv")
+    abm = ab.groupby(["strength", "features", "model"]).auc.mean()
+    abm = ab.groupby(["strength", "features", "model", "held_out"]).auc.mean().groupby(
+        ["strength", "features", "model"]).mean()
+    rows = []
+    for name in ["AE-SVM", "AE-SVM (anchored)", "RBF-SVM", "GP", "RF", "OC-SVM"]:
+        no_m = abm.get((0.3, "without Mahalanobis", name), np.nan)
+        cells = [f"${z3.loc[name, a]:.3f}$" for a in ATT] + [f"${z3.loc[name].mean():.3f}$",
+                 "--" if np.isnan(no_m) else f"${no_m:.3f}$"]
+        rows.append(f"    {name} & " + " & ".join(cells) + r" \\")
+    out["HY_T_ZD"] = "\n".join(rows)
+
+    # crossover control tasks
+    cr = pd.read_csv(HY / "kernel_crossover.csv").groupby(["task", "n_train", "model"]).acc.mean().unstack()
+    rows = []
+    for task, label in (("angular", "Direction only"), ("radial", "Norm only")):
+        for n in (25, 100, 1000):
+            rows.append(f"    {label if n == 25 else ''} & {n} & " +
+                        " & ".join(f"${cr.loc[(task, n), m]:.3f}$" for m in ["AE-SVM", "RBF-SVM", "GP", "RF"]) + r" \\")
+    out["HY_T_CROSS"] = "\n".join(rows)
+
+    # selective prediction at s = 0.3
+    sp = pd.read_csv(HY / "selective_prediction.csv")
+    sp = sp[sp.strength == 0.3].groupby(["model", "tau"])[["coverage", "accuracy"]].mean()
+    rows = []
+    for name in ["GP", "RF-isotonic", "AE-SVM"]:
+        cells = []
+        for tau in (0.3, 0.1):
+            cov, acc = sp.loc[(name, tau)]
+            cells += [f"${100 * cov:.0f}\\%$", "--" if np.isnan(acc) else f"${100 * acc:.1f}\\%$"]
+        rows.append(f"    {name} & " + " & ".join(cells) + r" \\")
+    out["HY_T_SELECT"] = "\n".join(rows)
+
+    # evasion
+    adv = pd.read_csv(HY / "adversarial.csv")
+    adv = adv[adv.strength == 0.3].groupby("budget")[["rf_detect", "gp_detect", "gp_unc"]].mean()
+    out["HY_T_ADV"] = "\n".join(f"    {b:.1f} & ${r.rf_detect:.2f}$ & ${r.gp_detect:.2f}$ & ${r.gp_unc:.2f}$ \\\\"
+                                for b, r in adv.loc[[0.0, 0.2, 0.4, 0.6, 0.8]].iterrows())
+
+    # latency
+    lat = pd.read_csv(HY / "latency.csv").set_index("component")
+    out["HY_T_LAT"] = "\n".join(f"    {c} & ${lat.loc[c, 'batch_ms_per_sample']:.4f}$ & "
+                                f"${lat.loc[c, 'single_ms_median']:.2f}$ \\\\"
+                                for c in ["Feature extraction", "AE-SVM", "RBF-SVM", "RF", "Hybrid", "GP"])
+    return out
+
+
 def real_rows(d):
     real = d["real"]
     if real is None:
@@ -299,11 +402,13 @@ if __name__ == "__main__":
     d = load()
     vals = fill_combined(d)
     vals.update(fill_qztna(d))
+    vals.update(fill_hyqad(d))
     rr = real_rows(d)
     if rr is not None:
         vals["REAL_ROWS"] = rr
     for tpl, out in ((ROOT / "papers/combined/quasar.template.tex", ROOT / "papers/combined/quasar.tex"),
-                     (ROOT / "papers/qztna/qcyber.template.tex", ROOT / "papers/qztna/qcyber.tex")):
+                     (ROOT / "papers/qztna/qcyber.template.tex", ROOT / "papers/qztna/qcyber.tex"),
+                     (ROOT / "papers/hyqad/paper.template.tex", ROOT / "papers/hyqad/paper.tex")):
         if tpl.exists():
             out.write_text(tpl.read_text())
             substitute(out, vals)
