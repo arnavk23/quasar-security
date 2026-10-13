@@ -4,22 +4,16 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{cite}
-\usepackage{hyperref}
-\usepackage{multirow}
-\usepackage{array}
-\usepackage{float}
-\usepackage{caption}
-\usepackage{subcaption}
 \usepackage{xcolor}
 \usepackage{placeins}
+\usepackage{hyperref}
 
 \hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
-
 \graphicspath{{../../figures/hyqad/}}
+\renewcommand{\arraystretch}{1.12}
+\newtheorem{proposition}{Proposition}
 
-\renewcommand{\arraystretch}{1.15}
-
-\title{Calibrated Uncertainty Quantification for QKD Anomaly Detection}
+\title{Calibrated and Kernel-Based Detection of QKD\\Implementation Attacks: A Controlled Simulation Study}
 
 \author{
   \IEEEauthorblockN{Arnav Kapoor}
@@ -34,477 +28,413 @@
 \maketitle
 
 \begin{abstract}
-Quantum Key Distribution (QKD) enables information-theoretically secure communication but remains vulnerable to implementation-level attacks that exploit hardware imperfections. We present HYQAD, a calibrated uncertainty quantification framework for QKD anomaly detection that combines a Bayesian Gaussian Process classifier with quantum-inspired feature engineering. On synthetic QKD telemetry spanning four attack scenarios (Photon-Number-Splitting, Detector Blinding, Trojan Horse, Intercept-Resend), our deployed inference path---a Bayesian GP alone---achieves $0.994 \pm 0.002$ accuracy with sub-10ms latency and calibrated predictive uncertainty enabling selective prediction: at a modest uncertainty threshold ($u < 0.3$), accuracy reaches $1.000$ on $89.7\%$ of the test set with the remainder deferred for human review. We include a rigorous, scale-controlled study of a 3-qubit quantum kernel SVM via PennyLane~\cite{bergholm2018pennylane}. A matched-$n$ ablation---training all models at identical sample sizes---reveals that the quantum kernel provides no benefit at any tested training scale on QKD data, due to $\mathcal{O}(n^2)$ circuit simulation cost limiting training to $n \leq 25$ samples on classical hardware. We identify three conditions under which quantum kernels could become competitive (large $n$, classically-hard feature separations, hardware-accelerated circuits) and provide a controlled experiment demonstrating quantum kernel advantage on a classically-hard synthetic problem, substantiating this forward-looking claim. Sensitivity analysis across attack perturbation magnitudes and an adversarial robustness evaluation further characterize detector behavior under realistic operating conditions. Random Forest achieves perfect separation ($1.000$ on all metrics), indicating the synthetic data lacks real-world noise complexity; experimental validation on physical QKD testbeds is essential. Our primary contribution is a principled uncertainty quantification pipeline for QKD security monitoring, with the quantum component documented as a scale-limited component under active investigation.
+Machine-learning detectors for quantum key distribution (QKD) implementation
+attacks are usually evaluated on simulated telemetry, and frequently report
+near-perfect accuracy. We show that such numbers can be an artifact of the
+simulator: without operating-condition drift, a single telemetry feature
+separates attacks from normal blocks perfectly. We build a seeded decoy-state
+BB84 telemetry simulator with drift in loss, misalignment, detector efficiency
+and background light, finite-size QBER noise, and a single \emph{attack-strength}
+parameter $s$ that scales four attack signatures (photon-number splitting,
+detector blinding, Trojan horse, intercept-resend) from blatant to subtle. On it
+we compare a Laplace Gaussian-process classifier (GP), an amplitude-encoding
+fidelity-kernel SVM (AE-SVM, 3 qubits, computed exactly and verified against a
+PennyLane circuit to $10^{-14}$), RBF-SVM, random forests and a GP+AE-SVM
+stacking model, all at matched training sizes over 10 seeds. At $s=0.3$, every
+supervised model lands between $0.80$ and $0.84$ MCC; random forest is best or
+tied-best throughout, and the GP is neither the most accurate nor the best
+calibrated (ECE $0.047$ vs.\ $0.030$ for isotonic-calibrated RF), so it is not
+the best basis for uncertainty-based deferral. The amplitude kernel does carry
+a usable inductive bias: it wins on direction-only control tasks and, on
+unseen attack types, matches RBF-SVM---but only because one feature (a
+Mahalanobis distance) carries the input's magnitude. Removing that feature
+drops AE-SVM's zero-day AUC from $0.95$ to $0.55$, while appending a constant
+``norm anchor'' coordinate before encoding restores it to $0.94$. Code, data and
+every result file are released.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Quantum Key Distribution, Anomaly Detection, Gaussian Processes, Uncertainty Quantification, Quantum Machine Learning, Physical-Layer Security
+Quantum key distribution, anomaly detection, Gaussian processes, quantum kernels, calibration, simulation methodology
 \end{IEEEkeywords}
 
 \section{Introduction}
 \label{sec:intro}
 
-Quantum Key Distribution (QKD) leverages the no-cloning theorem and measurement-induced disturbance to establish shared cryptographic keys with information-theoretic security~\cite{bennett1984quantum,gisin2002quantum}. While protocols such as BB84~\cite{bennett1984quantum} and decoy-state variants~\cite{lo2005decoy} are theoretically secure, practical implementations introduce side channels that adversaries can exploit~\cite{l0mti2005attacks,scarani2009security}. Subsequent protocol variants---measurement-device-independent QKD~\cite{lo2012measurement}, satellite-based distribution~\cite{liao2017satellite}, and twin-field QKD~\cite{lucamarini2018overcoming}---close specific side-channel or distance limitations, but the physical-layer telemetry monitoring problem we address here is largely orthogonal to the choice of protocol variant.
+QKD derives its security from physics~\cite{bennett1984quantum,gisin2002quantum},
+but deployed systems leak through implementation side channels: photon-number
+splitting (PNS) against multi-photon pulses~\cite{huttner1995photon,lutkenhaus2002pns},
+detector control by bright illumination~\cite{makarov2006effects,lydersen2010hacking},
+Trojan-horse probing of the transmitter or receiver~\cite{gisin2006trojan,jain2014trojan},
+and intercept-resend~\cite{bennett1992experimental}. Decoy states~\cite{lo2005decoy}
+and measurement-device-independent designs~\cite{lo2012measurement} close some of
+these channels; continuous telemetry monitoring is a complementary defense, and
+machine learning has been applied to it~\cite{mao2020detecting} and to related
+QKD control problems~\cite{ren2021machine}.
 
-Implementation attacks on QKD systems include Photon-Number-Splitting (PNS)~\cite{huttner1995photon}, Detector Blinding~\cite{makarov2006detector,larger2009controlling}, Trojan Horse~\cite{gisin2006trojan}, and Intercept-Resend~\cite{bennett1992experimental} strategies. These attacks manifest as anomalies in channel telemetry---QBER, photon count rates, detection efficiency, and background noise~\cite{jain2014detector}. Classical machine learning approaches for detecting such attacks include Support Vector Machines~\cite{ren2021machine}, Random Forests~\cite{breiman2001random}, and neural networks~\cite{liu2021qkd}. However, these methods provide point estimates without uncertainty quantification---a critical limitation for security applications where false negatives carry high cost and operators need calibrated confidence for decision-making.
+Two methodological problems make it hard to know what such detectors are worth.
+First, they are typically trained and tested on simulated telemetry, and a
+simulator in which normal operation sits at one fixed operating point makes
+almost any attack signature separable. Second, ``quantum'' components are often
+evaluated at very different training sizes from classical baselines, so a
+comparison confounds model and data.
 
-This paper makes three contributions:
-
+This paper is a controlled simulation study that addresses both. Our
+contributions are:
 \begin{enumerate}
-\item \textbf{Calibrated uncertainty quantification for QKD anomaly detection.} We present HYQAD, a framework whose deployed inference path (a Bayesian Gaussian Process classifier) achieves $0.994 \pm 0.002$ accuracy on synthetic QKD telemetry, with calibrated predictive uncertainty enabling selective prediction that trades coverage for accuracy. This is the paper's primary, operationally deployable contribution.
-
-\item \textbf{A rigorous, honest evaluation of quantum kernels at current scales.} We provide a matched-$n$ ablation---training all models at identical sample sizes---that isolates the quantum kernel's contribution from confounding training-set-size effects. We show that a 3-qubit quantum kernel SVM, limited to $n \leq 25$ training samples by $\mathcal{O}(n^2)$ circuit simulation cost on classical hardware, provides no benefit at any tested training scale on QKD data. We further demonstrate quantum kernel advantage on a classically-hard synthetic problem, establishing that the approach is sound in principle but currently scale-limited.
-
-\item \textbf{Comprehensive characterization under realistic conditions.} We perform sensitivity analysis across attack perturbation magnitudes, adversarial robustness evaluation against adaptive evasion, and per-attack-type analysis with uncertainty-aware deferral, providing a thorough baseline for future QKD security monitoring research.
+\item A seeded decoy-state BB84 telemetry simulator with operating drift and an
+  explicit attack-strength axis $s$, together with leakage checks. Without drift,
+  a single feature gives perfect separation; with it, detection degrades smoothly
+  from MCC $\approx 0.97$ at $s=1$ to $\approx 0.5$ at $s=0.05$ (Section~\ref{sec:sim}).
+\item A matched-$n$ comparison of a GP, an exact amplitude-encoding fidelity
+  kernel, RBF-SVM, random forest (RF) and stacking at every training size from
+  $25$ to $1400$ (Section~\ref{sec:results}).
+\item A mechanism for when the amplitude kernel generalizes to unseen attacks,
+  confirmed by ablation: it needs a feature that carries the input's magnitude,
+  which can be supplied by a one-line norm anchor (Section~\ref{sec:zeroday}).
+\item A calibration and selective-prediction comparison showing that the GP's
+  posterior is not the best uncertainty signal on this data
+  (Section~\ref{sec:calib}).
 \end{enumerate}
+All results are from simulation; Section~\ref{sec:limits} states what this does
+and does not establish.
 
 \section{Related Work}
 \label{sec:related}
 
-Detection of QKD implementation attacks has been approached through hardware-level monitoring~\cite{honz2019detection,hari2020detection}, statistical process control~\cite{shin2021channe}, and machine learning~\cite{mao2020detecting}. Ren et al.~\cite{ren2021machine} applied random forests and SVM to QKD protocol selection, while Liu and Zhang~\cite{liu2021qkd} used deep belief networks for multi-attack classification. These methods provide point estimates without calibrated uncertainty---a gap we address with Bayesian inference. To our knowledge, no prior work has applied uncertainty-aware anomaly detection specifically to QKD security monitoring; our work is the first to provide calibrated predictive probabilities that directly inform operator decision-making.
+Hardware countermeasures monitor detector statistics directly, for example
+after-pulse and efficiency estimates computed in real time~\cite{dasilva2012monitoring}.
+Mao et al.~\cite{mao2020detecting} trained neural networks to recognise attacks on
+continuous-variable QKD from measured statistics. We study discrete-variable
+decoy-state BB84 telemetry and focus on evaluation methodology, calibrated
+uncertainty and kernel inductive bias rather than on a new detector.
 
-Quantum machine learning broadly seeks to leverage quantum computation for learning tasks~\cite{biamonte2017quantum,schuld2019quantum}; quantum kernel methods, our focus here, encode classical data into quantum Hilbert spaces via parametrized circuits~\cite{havlicek2019supervised}. The resulting kernels can realize feature maps that are classically intractable~\cite{liu2021quantum,huang2021power}. Recent work has characterized the computational boundaries of quantum kernel advantage~\cite{huang2021power}, showing that the benefit depends critically on the alignment between the quantum feature map and the data's structure. Our work adapts these insights to QKD anomaly detection using amplitude encoding as a fixed quantum feature map---a ``quantum-enhanced'' rather than fully quantum approach---and provides an honest assessment of when (and when not) the quantum kernel adds value.
+Quantum kernel methods embed data in a Hilbert space through a state-preparation
+circuit and use state overlaps as a kernel~\cite{havlicek2019supervised,schuld2021machine}.
+Provable advantages exist for specially constructed problems~\cite{liu2021rigorous},
+and whether a quantum kernel helps on a given dataset depends on how its
+geometry matches the data~\cite{huang2021power}. Amplitude encoding is a case in
+which the overlap is classically computable (Proposition~\ref{prop:exact}), so it
+isolates the kernel's inductive bias from any question of quantum speed-up.
+Gaussian processes~\cite{rasmussen2006gaussian} and other Bayesian
+methods~\cite{perusquia2022bayesian} provide model-based uncertainty for anomaly
+detection; post-hoc recalibration~\cite{platt1999probabilistic,zadrozny2002transforming,guo2017calibration}
+is the standard alternative for point-estimate models.
 
-Bayesian anomaly detection~\cite{kennedy2020bayesian} offers principled uncertainty quantification. Gaussian Processes~\cite{rasmussen2006gaussian} provide posterior distributions over latent functions, naturally producing predictive variances that indicate out-of-distribution samples. Our framework operationalizes this uncertainty as a confidence metric for security operators, and we validate its calibration properties on QKD data.
+\section{Telemetry Simulator}
+\label{sec:sim}
 
-\section{Methodology}
+\subsection{Channel model}
+Each sample is one key-generation block of a decoy-state BB84 link over $L=50$\,km
+of fiber ($\alpha=0.2$\,dB/km). For mean photon number $\mu \sim \mathcal{U}(0.1,1)$,
+transmittance $T=10^{-A/10}$ and detector efficiency $\eta$, the gain and QBER of a
+Poisson source are~\cite{lo2005decoy}
+\begin{align}
+Q_\mu &= Y_0 + \bigl(1-e^{-\eta T\mu}\bigr)(1+p_{\mathrm{ap}}),\\
+E_\mu &= \bigl[\tfrac12 Y_0 + e_d\,(1-e^{-\eta T\mu})(1+p_{\mathrm{ap}})\bigr]/Q_\mu ,
+\end{align}
+with afterpulse probability $p_{\mathrm{ap}}=0.005$. Normal operation is not a
+single point: per block, the attenuation $A$ drifts by $\mathcal{N}(0,0.3^2)$\,dB
+around $\alpha L$, $\eta$ by $3\%$ around $0.9$, and the misalignment error $e_d$,
+dark-count probability $Y_0$ and background rate are log-normal around $0.01$,
+$10^{-5}$ and $100$\,s$^{-1}$ (log-scale s.d.\ $0.4$, $0.3$, $0.3$). The two
+reported error rates (sifted QBER and decoy-basis error rate) carry independent
+finite-size noise $\sqrt{E(1-E)/N_b}$ with $N_b=5000$. Seven measurements are
+reported per block: QBER, photon count rate, detection efficiency, dark-count
+rate, error rate, attenuation and background rate.
+
+\subsection{Attack models and strength}
+The four attacks perturb these measurements as in prior qualitative
+descriptions~\cite{huttner1995photon,makarov2006effects,gisin2006trojan,bennett1992experimental}:
+PNS removes a fraction $0.3$ of photons and raises QBER by $\mathcal{U}(0.02,0.08)$;
+blinding divides efficiency by $1+1.5\gamma$, $\gamma\sim\mathcal{U}(0.5,1.5)$, and
+raises QBER by $\mathcal{U}(0.05,0.25)$; Trojan-horse probing multiplies background
+by $1+10\rho$, $\rho\sim0.05\,\mathcal{U}(0.5,2)$; intercept-resend raises QBER by
+$\mathcal{U}(0.10,0.35)$ and lowers the count rate. These magnitudes are modeling
+assumptions, not measured values. Every deviation from the clean block is
+multiplied by a strength $s\ge0$, so $s=1$ is the default and $s\to0$ makes an
+attack indistinguishable from normal operation (Fig.~\ref{fig:qber}).
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.92\textwidth]{fig2_qber_dist.png}
+  \caption{QBER by class at attack strength $s=1$ and $s=0.3$. At $s=0.3$, PNS and
+  Trojan-horse blocks sit well below the 11\% bound and overlap normal operation.}
+  \label{fig:qber}
+\end{figure*}
+
+\subsection{Leakage checks}
+Two properties are tested in the released test suite. (i) Different seeds give
+different datasets, and every random draw, including attack perturbations,
+derives from the dataset seed. (ii) No single feature is a label proxy: block
+timestamps are drawn independently of the label, and a depth-2 decision tree on
+any single feature stays below perfect accuracy. We include these checks because
+an earlier version of our own pipeline failed both, which made every detector
+look near-perfect; we expect the same failure in other simulation-only QKD
+detection results.
+
+\section{Detectors and Protocol}
 \label{sec:method}
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig1_framework_hyqad.png}
-  \caption{HYQAD architecture: QKD channel simulation, quantum-inspired feature engineering, hybrid detection ensemble, and multi-objective evaluation.}
+  \includegraphics[width=\textwidth]{fig1_framework_hyqad.png}
+  \caption{Study design: simulator, attack models with strength $s$, a fixed 8-dimensional feature map shared by every detector, and the evaluation suite.}
   \label{fig:framework}
-\end{figure}
+\end{figure*}
 
-Fig.~\ref{fig:framework} illustrates the HYQAD architecture: (i) physics-driven QKD channel simulation with four attack models; (ii) quantum-inspired feature engineering (amplitude encoding, robust covariance estimation); (iii) a detection ensemble stacking a Bayesian GP and a 3-qubit quantum kernel SVM; and (iv) evaluation with uncertainty quantification and latency profiling.
+\textbf{Features.} Every detector sees the same 8 features
+(Fig.~\ref{fig:framework}): the 7 measurements standardized on the training
+split, plus the robust Mahalanobis distance~\cite{rousseeuw1999fast} of the
+standardized vector to the training-split normal blocks.
 
-\subsection{QKD Channel Model}
+\textbf{Amplitude-encoding fidelity kernel (AE-SVM).} A vector
+$\mathbf{x}\in\mathbb{R}^d$ is zero-padded to $2^q$ entries, $q=\lceil\log_2 d\rceil$,
+and normalized, giving the state $|\psi(\mathbf{x})\rangle=\sum_i \hat{x}_i|i\rangle$.
+The fidelity kernel is $K_A(\mathbf{x},\mathbf{y})=|\langle\psi(\mathbf{x})|\psi(\mathbf{y})\rangle|^2$.
 
-We model a decoy-state BB84 QKD system~\cite{lo2005decoy} over optical fiber with loss coefficient $\alpha$ (dB/km) and length $L$ (km). Channel transmittance is:
-\begin{equation}
-T = 10^{-\alpha L / 10}
-\end{equation}
+\begin{proposition}\label{prop:exact}
+$K_A(\mathbf{x},\mathbf{y}) = (\hat{\mathbf{x}}^{\mathsf{T}}\hat{\mathbf{y}})^2$,
+the squared cosine similarity of the inputs. It is computable classically in
+$\mathcal{O}(d)$ time per pair and is invariant to $\mathbf{x}\mapsto c\,\mathbf{x}$
+for every $c\neq0$, including $c=-1$.
+\end{proposition}
+\noindent The proof is immediate from real amplitudes and zero padding. We
+therefore evaluate the kernel exactly with all 8 features on 3 qubits, and
+confirm that a PennyLane~\cite{bergholm2018pennylane} state-vector simulation of
+the overlap circuit agrees to $7\times10^{-15}$; the circuit costs $26$\,ms per
+kernel entry versus $3\times10^{-4}$\,ms in closed form. The SVM uses $C=1$, balanced
+class weights and Platt-scaled probabilities~\cite{platt1999probabilistic}.
 
-For a signal pulse with mean photon number $\mu$, the gain---probability that Bob's detector registers a click---is:
-\begin{equation}
-G = \frac{1}{2} Y_0 + \left[1 - (1 - \eta_{\text{det}} T)^\mu\right] \cdot (1 + p_{\text{ap}})
-\end{equation}
-where $Y_0$ is the dark count probability, $\eta_{\text{det}}$ the detector efficiency, and $p_{\text{ap}}$ the afterpulse probability. The quantum bit error rate follows:
-\begin{equation}
-\text{QBER} = \frac{\frac{1}{4}Y_0 + e_d \cdot \left[1 - (1 - \eta_{\text{det}} T)^\mu\right] \cdot (1 + p_{\text{ap}})}{G}
-\end{equation}
-where $e_d$ is the optical misalignment error. The photon count rate is:
-\begin{equation}
-R_{\text{photon}} = \eta_{\text{det}} \cdot T \cdot \mu
-\end{equation}
+\textbf{Baselines.} A Laplace GP classifier~\cite{rasmussen2006gaussian} with an
+RBF+white-noise kernel (hyperparameters chosen by marginal likelihood on a
+stratified 300-sample subset, then fixed for the full fit); RBF-SVM with the same
+SVM settings as AE-SVM; RF (200 trees)~\cite{breiman2001random}, raw and
+isotonic-calibrated~\cite{zadrozny2002transforming}; a stacking model (Hybrid)
+combining GP and AE-SVM through logistic regression with 3-fold
+cross-validation~\cite{wolpert1992stacked}; and three novelty detectors fit on
+normal training blocks only (one-class SVM, isolation forest, LOF).
 
-We add zero-mean Gaussian noise scaled by a noise parameter $\sigma$ to incorporate realistic fluctuations:
-\begin{align}
-\text{QBER}_{\text{noisy}} &= \mathcal{N}\!\left(\text{QBER}, \sigma\cdot 0.1\right) \\
-R_{\text{photon}}^{\text{noisy}} &= \mathcal{N}_+\!\left(R_{\text{photon}}, \sigma\cdot R_{\text{photon}}\right) \\
-\eta_{\text{det}}^{\text{noisy}} &= \text{clip}\!\left(\mathcal{N}(\eta_{\text{det}}, \sigma\cdot 0.02), 0, 1\right)
-\end{align}
+\textbf{Protocol.} $N=2000$ blocks with 30\% attacks (balanced across types),
+70/30 stratified split, 10 seeds; we report means with 95\% confidence intervals
+over seeds. Matched-$n$ experiments train \emph{every} model on the same
+stratified subsample, for $n\in\{25,50,100,200,500,1000,1400\}$. Paired model
+comparisons use the exact McNemar test per seed. Zero-day experiments train on
+three attack types and test on normal blocks plus the held-out fourth, at
+$1{,}200$ test blocks per split.
 
-\subsection{Attack Models}
-
-We implement four attack types. The perturbation magnitudes are modeling assumptions drawn from qualitative attack descriptions rather than experimentally calibrated values. $\kappa = 0.3$ follows the standard PNS assumption that Eve extracts a fraction of multi-photon pulses~\cite{huttner1995photon}; $I_B = 1.5$ and $\mathcal{U}(0.5, 1.5)$ for $\gamma$ reflect the typical factor-of-two uncertainty in detector blinding efficacy~\cite{makarov2006detector}; QBER elevation ranges are set to produce signatures above the 11\% security threshold yet overlapping with normal operation, ensuring the classification problem is non-trivial.
-
-\textbf{Photon-Number-Splitting:} The adversary splits off a fraction $\kappa = 0.3$ of photons from multi-photon pulses:
-\begin{equation}
-R_{\text{photon}}^{\text{PNS}} = R_{\text{photon}} \cdot (1 - \kappa), \quad \Delta\text{QBER} \sim \mathcal{U}(0.02, 0.08)
-\end{equation}
-
-\textbf{Detector Blinding:} A continuous-wave laser blinds Bob's detectors~\cite{makarov2006detector}, scaling detection efficiency:
-\begin{equation}
-\eta_{\text{det}}^{\text{blind}} = \frac{\eta_{\text{det}}}{1 + I_B \cdot \gamma}, \quad \gamma \sim \mathcal{U}(0.5, 1.5), \quad I_B = 1.5
-\end{equation}
-with QBER elevated by $\mathcal{U}(0.05, 0.25)$.
-
-\textbf{Trojan Horse:} Probe light injected into Bob's module raises background noise~\cite{gisin2006trojan}:
-\begin{equation}
-R_{\text{bg}}^{\text{TH}} = R_{\text{bg}} \cdot \left(1 + \rho \cdot 10\right), \quad \rho \sim \mathcal{U}(0.025, 0.1)
-\end{equation}
-
-\textbf{Intercept-Resend:} Eve measures and re-transmits, inducing high QBER~\cite{bennett1992experimental}:
-\begin{equation}
-\Delta\text{QBER} \sim \mathcal{U}(0.10, 0.35), \quad R_{\text{photon}}^{\text{IR}} = R_{\text{photon}} \cdot \mathcal{U}(0.6, 0.95)
-\end{equation}
-
-All perturbations are clipped to $[0, 0.5]$ post-modification.
-
-\subsection{Feature Engineering}
-
-\textbf{Amplitude Encoding:} Each 8-dimensional QKD measurement $\mathbf{x} \in \mathbb{R}^8$ is $L_2$-normalized to produce a unit state vector:
-\begin{equation}
-\phi(\mathbf{x}) = \frac{\mathbf{x}}{\|\mathbf{x}\|_2}
-\end{equation}
-This prepares a quantum state $|\psi(\mathbf{x})\rangle$ with amplitudes $\phi(\mathbf{x})$, requiring $\lceil \log_2 8 \rceil = 3$ qubits. The quantum kernel between two measurements is their state overlap:
-\begin{equation}
-K_Q(\mathbf{x}_i, \mathbf{x}_j) = |\langle\psi(\mathbf{x}_i) | \psi(\mathbf{x}_j)\rangle|^2
-\end{equation}
-For batch processing we also perform QR decomposition for numerical stability; this does not affect per-sample state preparation.
-
-\textbf{Covariance Features:} We use the Minimum Covariance Determinant estimator~\cite{rousseeuw1999fast} for robust covariance estimation. The Mahalanobis distance for $\mathbf{x}$ is:
-\begin{equation}
-D_M(\mathbf{x}) = \sqrt{(\mathbf{x} - \boldsymbol{\mu})^\mathsf{T} \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu})}
-\end{equation}
-The feature vector for time step $t$ concatenates local mean, local std (window $w=20$), $D_M$, covariance Frobenius norm, and mean/max pairwise correlation---producing 20 additional dimensions.
-
-\subsection{Detection Models}
-
-\textbf{Bayesian Gaussian Process Classifier:} We place a GP prior over $f(\mathbf{x})$ with an RBF kernel:
-\begin{equation}
-k(\mathbf{x}_i, \mathbf{x}_j) = \sigma_f^2 \exp\!\left(-\frac{\|\mathbf{x}_i - \mathbf{x}_j\|^2}{2\ell^2}\right) + \sigma_n^2 \delta_{ij}
-\end{equation}
-The posterior is approximated via Laplace approximation~\cite{rasmussen2006gaussian}. Predictive probabilities are:
-\begin{equation}
-\pi(\mathbf{x}_*) = \Phi\!\left(\frac{\mu(\mathbf{x}_*)}{\sqrt{1 + \sigma^2(\mathbf{x}_*)}}\right)
-\label{eq:gppredict}
-\end{equation}
-and we define uncertainty as $u(\mathbf{x}_*) = \sqrt{\pi(\mathbf{x}_*) \cdot (1 - \pi(\mathbf{x}_*))}$.
-
-\textbf{Quantum Kernel SVM:} Amplitude-encoded states on $n_q = 3$ qubits produce kernel entries:
-\begin{equation}
-K_Q(\mathbf{x}_i, \mathbf{x}_j) = \left|\langle 0^{\otimes n_q} | U^\dagger(\mathbf{x}_j) U(\mathbf{x}_i) | 0^{\otimes n_q}\rangle\right|^2
-\end{equation}
-fed into an SVM ($C = 1.0$) with precomputed kernel. The $\mathcal{O}(n^2)$ cost of evaluating pairwise circuit overlaps limits training set sizes to $n \leq 25$ on classical hardware with reasonable wall-clock time (minutes, not hours)---a scale restriction consistent with the broader noisy intermediate-scale quantum (NISQ) constraints on near-term quantum and quantum-simulated circuits~\cite{preskill2018quantum}.
-
-\textbf{Stacking Ensemble:} The research configuration fuses Bayesian GP and quantum kernel SVM predictions via logistic regression stacking~\cite{wolpert1992stacked} with 3-fold cross-validation:
-\begin{equation}
-P(y = 1 | \mathbf{x}) = \sigma\!\left(\mathbf{w}^\mathsf{T} [\mathbf{p}_{\text{B}}(\mathbf{x}), \mathbf{p}_{\text{Q}}(\mathbf{x})] + b\right)
-\label{eq:stacking}
-\end{equation}
-
-\textbf{Deployed Inference Path:} At inference time, the quantum kernel is not invoked per-query. The deployed path uses the Bayesian GP's posterior probability alone:
-\begin{equation}
-P_{\text{deployed}}(y = 1 | \mathbf{x}) = p_{\text{B}}(\mathbf{x})
-\label{eq:deployed}
-\end{equation}
-where $p_{\text{B}}(\mathbf{x})$ is the GP's predictive probability from Eq.~\ref{eq:gppredict}. This corresponds to the limit $w_{\text{Q}} \to 0$ in Eq.~\ref{eq:stacking}---the meta-learner's weight on the quantum kernel prediction is effectively zero, so no additional calibration layer is needed. The GP's Laplace-approximated posterior already provides calibrated probabilities~\cite{rasmussen2006gaussian}, making the extra logistic regression step unnecessary. This yields the sub-10ms inference latency reported in Table~\ref{tab:latency}. The research configuration (Eq.~\ref{eq:stacking}) is used only during offline recalibration to verify that the quantum kernel's inclusion does not shift the decision boundary; in practice it does not, so Eq.~\ref{eq:deployed} is the production path.
-
-\subsection{Parameter Optimization}
-
-Hyperparameter tuning follows a multi-strategy protocol: L-BFGS-B for continuous parameters, differential evolution for global search, basin hopping for non-convex landscapes, and grid search cross-validation.
-
-\section{Experiments}
-\label{sec:experiments}
-
-\subsection{Data Generation}
-
-We generate $N = 1000$ labeled samples using default parameters: $L = 50$ km, $\alpha = 0.2$ dB/km, $Y_0 = 10^{-5}$, $\eta_{\text{det}} = 0.9$, $e_d = 0.01$, $p_{\text{ap}} = 0.005$, $\sigma = 0.05$. Attack ratio is 30\%, distributed equally across attack types. Data is split 70/30 with stratification. Results are reported as mean $\pm$ std over 10 random seeds (except the matched-$n$ ablation, which reports 95\% confidence intervals).
-
-Fig.~\ref{fig:qber} shows the bimodal QBER distribution. Normal samples cluster near $0.03$--$0.05$, while attack samples extend to $0.30$ and beyond. The canonical 11\% security threshold~\cite{lo2005decoy} provides incomplete separation, motivating the multivariate feature space.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig2_qber_dist.png}
-  \caption{QBER distribution under normal and attack conditions. The 11\% security threshold provides partial separation, motivating the full 28-dimensional feature analysis.}
-  \label{fig:qber}
-\end{figure}
-
-\subsection{Feature Space and Baselines}
-
-Raw 8-dimensional features (QBER, photon count rate, detection efficiency, dark count rate, error rate, signal attenuation, background noise, time) are transformed into 8 amplitude-encoded features and 20 covariance features. We compare against Random Forest (RF, 200 trees), One-Class SVM (RBF kernel, $\nu = 0.1$), Isolation Forest (100 trees, contamination = 0.1), and Local Outlier Factor (20 neighbors, contamination = 0.1).
-
-\section{Results and Discussion}
+\section{Results}
 \label{sec:results}
 
-\subsection{Matched-$n$ Ablation Study}
-\label{sec:matched_n}
-
-A fundamental challenge in evaluating the quantum kernel is that its $\mathcal{O}(n^2)$ circuit simulation cost on classical hardware limits training set sizes to $n \leq 25$ samples, while GP and RF can train on the full 700-sample training split. Any comparison at different $n$ is therefore confounded: poor QK performance could reflect either a bad model or insufficient data.
-
-Table~\ref{tab:ablation} reports the original ablation at $N=500$ (raw 8-dim features) where this confound is explicitly present, and we therefore refrain from drawing cross-model comparisons from it. Fig.~\ref{fig:matched_n} resolves this confound by training all four models at identical $n$, sweeping from $n=25$ (QK-feasible) to $n=700$ (GP/RF maximum).
+\subsection{In-distribution detection}
 
 \begin{table}[t]
   \centering
-  \caption{Original ablation at $N=500$ with raw 8-dim features (mean~$\pm$~std, 3 seeds). GP and RF train on 350 samples; QK and Hybrid are capped at $n=25$. Cross-model comparisons at different $n$ are confounded; see Fig.~\ref{fig:matched_n} for the matched-$n$ analysis.}
-  \label{tab:ablation}
+  \caption{Detection at $n=1400$ (mean $\pm$ 95\% CI, 10 seeds). ECE uses 15 equal-width bins.}
+  \label{tab:bench}
   \scriptsize
-  \begin{tabular}{lccccc}
-    \toprule
-    \textbf{Metric} & \textbf{RF} & \textbf{GP-only} & \textbf{QK-only} & \textbf{Hybrid} \\
-    \midrule
-    Acc.  & $\mathbf{1.000}_{\pm 0.000}$ & $0.900_{\pm 0.042}$ & $0.700_{\pm 0.000}$ & $0.782_{\pm 0.077}$ \\
-    F1    & $\mathbf{1.000}_{\pm 0.000}$ & $0.795_{\pm 0.098}$ & $0.000_{\pm 0.000}$ & $0.384_{\pm 0.347}$ \\
-    AUC   & $\mathbf{1.000}_{\pm 0.000}$ & $0.917_{\pm 0.064}$ & $0.606_{\pm 0.244}$ & $0.749_{\pm 0.067}$ \\
-    MCC   & $\mathbf{1.000}_{\pm 0.000}$ & $0.762_{\pm 0.098}$ & $0.000_{\pm 0.000}$ & $0.380_{\pm 0.339}$ \\
-    Bal.  & $\mathbf{1.000}_{\pm 0.000}$ & $0.835_{\pm 0.073}$ & $0.500_{\pm 0.000}$ & $0.637_{\pm 0.129}$ \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig_matched_n_curves.png}
-  \caption{Matched-$n$ learning curves on 28-dimensional engineered features (mean~$\pm$~95\% CI, 10 seeds). All four models are trained at identical $n \in \{25, 50, 100, 200, 500, 700\}$. GP and RF saturate by $n \approx 100$; QK remains flat and near baseline ($0.700$) across all feasible $n$, confirming that the quantum kernel's poor performance is not due to insufficient training data.}
-  \label{fig:matched_n}
-\end{figure}
-
-\textbf{Key findings:} (i) GP and RF are already at ceiling by $n=100$ on this data; (ii) QK remains flat near the majority-class baseline ($\approx 0.700$ accuracy, $0.000$ F1) across all tested $n$, confirming that its poor performance is intrinsic, not a training-size artifact; (iii) Hybrid is dominated by GP-only at every $n$.
-
-\subsection{Full Benchmark}
-
-\begin{table}[t]
-  \centering
-  \caption{Full benchmark on $N=1000$ with 28-dim engineered features (mean~$\pm$~95\% CI). RF and Deployed GP use 10 seeds (matched-$n$ ablation at $n = 700$); Hybrid, OC-SVM, IF, and LOF use 5 seeds. The ``Deployed'' column uses the Bayesian GP alone. RF achieves near-perfect separation; the deployed (GP-only) and hybrid (GP+QK) configurations are functionally equivalent on 4/5 seeds, with Hybrid unstable on 1 seed due to QK fragility (see Section~\ref{sec:results}).}
-  \label{tab:benchmark}
-  \scriptsize
-  \setlength{\tabcolsep}{1.3pt}
+  \setlength{\tabcolsep}{2.6pt}
   \begin{tabular}{lcccccc}
     \toprule
-    \textbf{Metric} & \textbf{RF} & \textbf{Dep.} & \textbf{Hyb.} & \textbf{OC-SVM} & \textbf{IF} & \textbf{LOF} \\
+    & \multicolumn{3}{c}{$s=1.0$} & \multicolumn{3}{c}{$s=0.3$} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}
+    Model & MCC & AUC & ECE & MCC & AUC & ECE \\
     \midrule
-    Acc.  & $\mathbf{1.000}$ & $0.994$ & $0.934$ & $0.881$ & $0.690$ & $0.634$ \\
-          & {\scriptsize [1.000, 1.000]} & {\scriptsize $\pm$ 0.002} & {\scriptsize $\pm$ 0.081} & {\scriptsize $\pm$ 0.029} & {\scriptsize $\pm$ 0.020} & {\scriptsize $\pm$ 0.048} \\
-    F1    & $\mathbf{1.000}$ & $0.989$ & $0.790$ & $0.836$ & $0.399$ & $0.184$ \\
-          & {\scriptsize [0.998, 1.000]} & {\scriptsize $\pm$ 0.004} & {\scriptsize $\pm$ 0.387} & {\scriptsize $\pm$ 0.034} & {\scriptsize $\pm$ 0.026} & {\scriptsize $\pm$ 0.042} \\
-    AUC   & $\mathbf{1.000}$ & $\mathbf{1.000}$ & $\mathbf{1.000}$ & $0.000$ & $0.343$ & $0.634$ \\
-          & {\scriptsize [1.000, 1.000]} & {\scriptsize [1.000, 1.000]} & {\scriptsize [1.000, 1.000]} & {\scriptsize [0.000, 0.000]} & {\scriptsize $\pm$ 0.025} & {\scriptsize $\pm$ 0.071} \\
-    MCC   & $\mathbf{1.000}$ & $0.985$ & $0.786$ & $0.773$ & $0.206$ & $-0.013$ \\
-          & {\scriptsize [0.998, 1.000]} & {\scriptsize $\pm$ 0.006} & {\scriptsize $\pm$ 0.385} & {\scriptsize $\pm$ 0.046} & {\scriptsize $\pm$ 0.032} & {\scriptsize $\pm$ 0.035} \\
-    Bal.  & $\mathbf{1.000}$ & $0.989$ & $0.890$ & $0.915$ & $0.591$ & $0.492$ \\
-          & {\scriptsize [0.998, 1.000]} & {\scriptsize $\pm$ 0.004} & {\scriptsize $\pm$ 0.191} & {\scriptsize $\pm$ 0.021} & {\scriptsize $\pm$ 0.013} & {\scriptsize $\pm$ 0.035} \\
-    Spec. & $\mathbf{1.000}$ & $\mathbf{1.000}$ & $\mathbf{1.000}$ & $0.830$ & $0.838$ & $0.847$ \\
-          & {\scriptsize [1.000, 1.000]} & {\scriptsize [1.000, 1.000]} & {\scriptsize [1.000, 1.000]} & {\scriptsize $\pm$ 0.042} & {\scriptsize $\pm$ 0.042} & {\scriptsize $\pm$ 0.070} \\
+    RF          & $\mathbf{.975}{\scriptstyle\pm.008}$ & $.999$ & $.013$ & $\mathbf{.834}{\scriptstyle\pm.013}$ & $.969$ & $.030$ \\
+    RF-isotonic & $.972{\scriptstyle\pm.008}$ & $.997$ & $\mathbf{.010}$ & $\mathbf{.837}{\scriptstyle\pm.013}$ & $.967$ & $\mathbf{.030}$ \\
+    Hybrid      & $.971{\scriptstyle\pm.005}$ & $.999$ & $.015$ & $\mathbf{.833}{\scriptstyle\pm.016}$ & $.969$ & $.037$ \\
+    RBF-SVM     & $.969{\scriptstyle\pm.008}$ & $.999$ & $.011$ & $.810{\scriptstyle\pm.015}$ & $.957$ & $.040$ \\
+    GP          & $.964{\scriptstyle\pm.009}$ & $.999$ & $.039$ & $.801{\scriptstyle\pm.016}$ & $.956$ & $.047$ \\
+    AE-SVM      & $.955{\scriptstyle\pm.011}$ & $.999$ & $.015$ & $.814{\scriptstyle\pm.023}$ & $\mathbf{.970}$ & $.032$ \\
+    \midrule
+    OC-SVM      & $.838{\scriptstyle\pm.016}$ & $.994$ & -- & $.657{\scriptstyle\pm.017}$ & $.839$ & -- \\
+    IF          & $.837{\scriptstyle\pm.021}$ & $.997$ & -- & $.722{\scriptstyle\pm.019}$ & $.929$ & -- \\
+    LOF         & $.824{\scriptstyle\pm.021}$ & $.997$ & -- & $.691{\scriptstyle\pm.011}$ & $.924$ & -- \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Table~\ref{tab:benchmark} reports the full 1000-sample evaluation with 28-dim engineered features. RF achieves near-perfect separation on all metrics ($1.000$). The deployed configuration (Eq.~\ref{eq:deployed}, Bayesian GP alone) achieves $0.994 \pm 0.002$ accuracy. The research configuration (Eq.~\ref{eq:stacking}, full stacking including the quantum kernel) achieves $0.934 \pm 0.081$ accuracy, with the large CI reflecting instability: on 4/5 seeds, Hybrid matches Deployed ($\leq 1\%$ difference), but on one seed the quantum kernel's collapse ($0.700$ accuracy, $0.000$ F1) propagates through the meta-learner. This instability is itself a finding: adding QK to the pipeline introduces fragility without improving the accuracy ceiling.
+Table~\ref{tab:bench} reports detection at the full training size. At $s=1$
+every supervised model exceeds $0.95$ MCC and $0.99$ AUC, so this operating point
+does not discriminate between methods; the novelty detectors, which never see an
+attack label, reach $0.82$--$0.84$ MCC. At $s=0.3$ the supervised models spread
+between $0.80$ and $0.84$ MCC: RF, isotonic RF and Hybrid lead, and the GP has the
+lowest attack recall ($0.78\pm0.02$, against $0.85$ for RF and $0.90$ for
+AE-SVM) because it trades recall for specificity ($0.98$). Hybrid improves on
+the GP alone (pooled over seeds, Hybrid corrects $154$ GP errors and introduces
+$76$; McNemar $p<0.05$ on 4 of 10 seeds) but does not improve on RF. AE-SVM
+matches RBF-SVM in accuracy (both $0.920$; McNemar $p>0.05$ on every seed) and has
+the highest AUC ($0.970$).
 
-A paired McNemar's test between Deployed and Hybrid for each of the 5 seeds yields $p > 0.05$ in 4 cases; the fifth seed (seed 3) shows discordance ($0.700$ vs.\ $0.997$ accuracy) attributable to QK instability at $n = 25$, where the quantum kernel predicted the minority class with near-zero recall, collapsing the meta-learner. Across the4 stable seeds, accuracy differences are $\leq 1\%$, confirming functional equivalence. The meta-learner in Eq.~\ref{eq:stacking} assigns near-zero weight to the quantum kernel's predictions, confirming that the QK provides no signal beyond what the GP already captures. At current training scales the quantum kernel's contribution is not merely neutral; it is superfluous, and the simpler GP-only pipeline is strictly preferable on both accuracy and latency grounds.
+\subsection{Matched training size}
 
-This near-perfect separability of RF and GP-based models reflects the synthetic data difficulty: engineered attack perturbations create separable signatures in the 28-dimensional feature space. This caveat is essential---the evaluation likely underestimates sophisticated detectors' value because the data lacks real-world noise complexity. HYQAD's competitive performance should be understood in this context; its primary value remains calibrated uncertainty quantification rather than raw accuracy.
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.92\textwidth]{fig3_matched_n.png}
+  \caption{MCC versus training size, every model trained on the same stratified subsample (mean $\pm$ 95\% CI, 10 seeds). The Hybrid model is unstable at $n=25$, where its 3-fold stacking has only $\approx$8 training blocks per fold.}
+  \label{fig:matched}
+\end{figure*}
 
-Fig.~\ref{fig:bench} shows that classical baselines struggle: OC-SVM achieves perfect ranking (AUC = $1.000 \pm 0.000$) but poor calibration (accuracy $0.872 \pm 0.044$), IF shows low attack recall (F1 = $0.408 \pm 0.024$), and LOF performs near-random (AUC = $0.361 \pm 0.105$). The Deployed GP classifier substantially outperforms all classical baselines except RF.
+Fig.~\ref{fig:matched} trains every model at every $n$. RF is the most
+sample-efficient model at both strengths (MCC $0.75$ at $n=25$, $s=0.3$, against
+$0.65$--$0.68$ for the kernel methods and GP). The amplitude kernel needs more data
+than the RBF kernel to reach the same MCC: at $s=0.3$ AE-SVM trails RBF-SVM by
+$0.03$--$0.04$ for $n=50$--$200$ and reaches parity only from $n=1000$
+($0.804$ vs.\ $0.806$); at $s=1$ it trails by $0.008$--$0.017$ at every $n\ge50$.
+There is no training size at which it is reliably ahead.
+
+\subsection{Attack strength}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.92\textwidth]{fig4_strength_sweep.png}
+  \caption{Left: MCC versus attack strength at $n=1400$. Right: GP recall per attack type. Trojan-horse and PNS signatures are lost first.}
+  \label{fig:strength}
+\end{figure*}
+
+All four detectors degrade together as $s$ falls (Fig.~\ref{fig:strength}),
+from MCC $0.96$--$0.98$ at $s=1$ to $0.61$--$0.62$ at $s=0.1$ and $0.47$--$0.51$ at
+$s=0.05$. RF is best at every $s\ge0.2$; below that all four are within $0.04$
+MCC of each other. Per attack type, intercept-resend and detector blinding keep
+GP recall $\ge0.97$ down to $s=0.1$ because they move QBER the most, while PNS
+and Trojan-horse probing are lost first (Trojan-horse recall $0.45$ at $s=0.3$).
+
+\subsection{Unseen attack types}
+\label{sec:zeroday}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.92\textwidth]{fig5_zeroday.png}
+  \caption{AUC on a held-out attack type, training on the other three (mean $\pm$ 95\% CI, 10 seeds).}
+  \label{fig:zeroday}
+\end{figure*}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig5_benchmark.png}
-  \caption{Benchmark comparison: RF achieves perfect scores; the Deployed (GP-only) classifier outperforms all other classical baselines with calibrated uncertainty.}
-  \label{fig:bench}
+  \includegraphics[width=0.92\columnwidth]{fig9_mahal_ablation.png}
+  \caption{Mean zero-day AUC with and without the Mahalanobis feature. Without it, the amplitude kernel discards all magnitude information and fails on unseen attacks; a norm anchor restores it.}
+  \label{fig:mahal}
 \end{figure}
 
-\subsection{Sensitivity to Attack Perturbation Strength}
+In leave-one-attack-out tests (Fig.~\ref{fig:zeroday}) AE-SVM generalizes as
+well as RF and better than RBF-SVM at $s=0.3$ (mean AUC $0.952$ vs.\ $0.917$),
+despite a lower kernel-target alignment~\cite{cristianini2002kernel}
+with the labels ($0.13$--$0.22$ vs.\ $0.29$--$0.66$ across attack types). Proposition~\ref{prop:exact} suggests why
+this is fragile: $K_A$ ignores $\|\mathbf{x}\|$, and an unseen attack is most
+easily recognised by \emph{how far} it is from normal operation, which is a
+magnitude. In our feature map that magnitude is carried by one coordinate, the
+Mahalanobis distance. Removing it (Fig.~\ref{fig:mahal}) drops AE-SVM's mean
+zero-day AUC to $0.554$ at $s=0.3$ and $0.635$ at $s=1$, while RBF-SVM is
+unaffected ($0.940$, $0.987$). Appending a constant coordinate
+$c=\mathrm{median}_{\mathrm{train}}\|\mathbf{x}\|$ before encoding, so that
+$\phi(\mathbf{x})=(\mathbf{x},c)/\|(\mathbf{x},c)\|$ retains the input's norm relative
+to $c$, restores AE-SVM to $0.939$ and $0.980$ without the Mahalanobis feature.
 
-A key limitation of the preceding results is that all attacks are tuned to a single operating point. We evaluate sensitivity at two scales: $n = 25$ (QK-feasible, matching the QK training budget) and $n = 700$ (deployment-scale RF/GP). Fig.~\ref{fig:sensitivity} shows the $n = 25$ heatmaps; Fig.~\ref{fig:sensitivity_fulln} compares mean accuracy across scales. As expected, all models degrade as attacks become subtler, but the degradation profiles differ: at deployment scale ($n = 700$), both RF and GP maintain accuracy above $0.92$ even at the most subtle attack strength ($0.1\times$), and reach $\geq 0.99$ by strength $0.3$. At the matched QK scale ($n = 25$), RF shows slightly more variance due to limited training data, while GP remains stable---its inductive bias provides regularization benefits at small $n$.
+\subsection{When the amplitude kernel helps}
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig_sensitivity_heatmap.png}
-  \caption{Sensitivity analysis: accuracy as a function of attack perturbation strength for RF and GP (matched $n = 25$, 4 seeds). Strength $1.0$ corresponds to default parameters; lower values produce subtler, harder-to-detect attacks. QK omitted (too slow, and Section~\ref{sec:matched_n} shows it provides no benefit).}
-  \label{fig:sensitivity}
-\end{figure}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig_sensitivity_full_n.png}
-  \caption{Sensitivity comparison at deployment scale ($n = 700$) vs.\ QK-scale ($n = 25$). At full scale, RF and GP maintain accuracy $\geq 0.92$ even at the most subtle attacks ($0.1\times$) and converge to $\geq 0.99$ by strength $0.3$, characterizing the deployed detector's operating envelope under stress.}
-  \label{fig:sensitivity_fulln}
-\end{figure}
-
-\subsection{Adversarial Robustness}
-
-For a security application, robustness against adaptive adversaries is critical. We evaluate evasion resilience by perturbing the five most discriminative features (identified by RF feature importance) toward normal-class values, bounded by physically plausible ranges. Fig.~\ref{fig:adversarial} shows the detection rate as a function of perturbation budget. Both models degrade under evasion, with RF maintaining a small but consistent advantage (2--6 percentage points) across all budgets, attributable to its ensemble structure providing greater robustness to individual feature perturbation. Critically, GP's uncertainty output flags evasive samples with elevated uncertainty (mean $u \approx 0.30$--$0.38$ for budgets $> 0$), enabling selective deferral when the adversary's perturbation pushes samples near the decision boundary.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig_adversarial_robustness.png}
-  \caption{Adversarial robustness: detection rate vs.\ perturbation budget for RF and GP. GP's uncertainty output (right axis) flags evasive samples, enabling operator deferral.}
-  \label{fig:adversarial}
-\end{figure}
-
-\subsection{Attack-Specific Analysis and Uncertainty Quantification}
-
-Fig.~\ref{fig:radar} shows normalized parameter profiles per attack type. Detector blinding and intercept-resend produce the strongest QBER elevation, making them most detectable. Trojan horse primarily elevates background noise with minimal QBER impact, making it the most stealthy.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig3_attack_radar.png}
-  \caption{Normalized radar profiles of four attack types in QKD parameter space.}
-  \label{fig:radar}
-\end{figure}
-
-The Bayesian GP provides calibrated uncertainty (Fig.~\ref{fig:uncertainty}). Normal samples show near-zero scores with low uncertainty; attack samples exhibit elevated scores, with uncertainty peaking near the decision boundary. This U-shaped distribution validates calibration: confident predictions (both classes) have lowest uncertainty. Averaged over 10 seeds at the deployed model's actual training configuration ($n=700$, 28-dim engineered features, matching Table~\ref{tab:benchmark}), the Bayesian GP's Expected Calibration Error is $0.047 \pm 0.002$ (95\% CI)---confirming, rather than merely asserting from a single run, that predictive probabilities match empirical frequencies across the confidence range.
-
-The quantum kernel SVM's calibration is worse and highly seed-variable: ECE $=0.098 \pm 0.055$ (range $0.024$--$0.192$ across seeds), reflecting the instability already documented for QK at $n=25$ (Section~\ref{sec:matched_n}). We also checked a baseline the original evaluation omitted: Random Forest's \emph{raw} predicted probabilities, at the same $n=700$ budget, are in fact comparably uncalibrated (ECE $=0.095 \pm 0.010$)---RF's vote-fraction outputs are known to need post-hoc calibration, and this data is no exception. Applying standard post-hoc calibration~\cite{zadrozny2002transforming} fixes this: isotonic-calibrated RF reaches ECE $=0.002 \pm 0.001$ and Platt-scaled RF reaches ECE $=0.015 \pm 0.001$ (Fig.~\ref{fig:ece}), both better-calibrated than the GP's model-based posterior---consistent with the broader finding that modern classifiers' raw confidence scores are frequently miscalibrated and benefit from an explicit recalibration step~\cite{guo2017calibration}. We report this as a genuine, if secondary, finding: the GP's posterior variance is a principled, model-based uncertainty signal that a point-estimate forest does not natively provide, but if empirical ECE alone is the criterion, a cheaply isotonic-calibrated Random Forest matches or exceeds it on this data---a comparison the original single-model evaluation did not include.
-
-This uncertainty signal enables selective prediction: with a modest uncertainty threshold of $u < 0.3$, accuracy reaches $1.000 \pm 0.000$ on $88.97\% \pm 1.49\%$ of the test set (10-seed mean $\pm$ 95\% CI), with the remainder deferred for human review. High-uncertainty predictions can be flagged for security operator review, with the deferral threshold tunable to match operational risk tolerance.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig6_uncertainty.png}
-  \caption{Bayesian GP uncertainty: predictive uncertainty vs.\ anomaly score (left) and score distributions by class (right).}
-  \label{fig:uncertainty}
-\end{figure}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig_ece_reliability.png}
-  \caption{Calibration analysis at the deployed model's actual training configuration ($n=700$, 28-dim features), mean $\pm$ 95\% CI over 10 seeds. Left: reliability diagram (one representative seed). Right: mean ECE by model---the Bayesian GP (ECE $=0.047$) is well-calibrated and clearly better than the quantum kernel SVM (ECE $=0.098$) or Random Forest's raw probabilities (ECE $=0.095$); isotonic- or Platt-calibrated Random Forest (ECE $=0.002$/$0.015$) outperforms all three, showing that post-hoc calibration of a point-estimate model is a viable alternative to the GP's native posterior when ECE alone is the criterion.}
-  \label{fig:ece}
-\end{figure}
-
-\subsection{Quantum Kernel Crossover Analysis}
-
-To demonstrate that the quantum kernel's failure on QKD data is data-specific rather than architectural, we construct two classically-hard classification problems: (i) concentric quantum states where class labels depend on Hilbert-space phase relationships destroyed by $L_2$ normalization, and (ii) concentric ring distributions where radial information (discriminative for classical kernels) is destroyed by amplitude encoding. Fig.~\ref{fig:crossover} shows that on these problems, the quantum kernel SVM matches or exceeds classical baselines at small $n$---confirming that the amplitude-encoding feature map can express decision boundaries that classical kernels cannot, but that QKD telemetry geometry does not exhibit this structure.
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{fig_qk_crossover.png}
-  \caption{QK crossover experiment: accuracy on classically-hard synthetic problems. The quantum kernel matches or exceeds classical baselines, demonstrating architectural soundness despite current scale limitations.}
+  \includegraphics[width=0.92\textwidth]{fig8_kernel_crossover.png}
+  \caption{Control tasks in $\mathbb{R}^8$ with heavy-tailed norms. Left: label depends on direction only. Right: label depends on norm only.}
   \label{fig:crossover}
+\end{figure*}
+
+Fig.~\ref{fig:crossover} isolates the inductive bias. When the label depends only
+on direction and the norm is a heavy-tailed nuisance, AE-SVM learns from far
+fewer samples than any baseline ($0.71$ vs.\ $0.56$ for RBF-SVM at $n=25$; $0.97$
+vs.\ $0.74$ at $n=1000$). When the label depends only on norm, AE-SVM is at
+chance at every $n$. QKD telemetry is neither extreme, which is why the kernel is
+competitive but not superior on it.
+
+\subsection{Calibration and selective prediction}
+\label{sec:calib}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.92\textwidth]{fig6_calibration_selective.png}
+  \caption{Left: ECE by model. Right: accuracy versus coverage when deferring samples with uncertainty $u=\sqrt{p(1-p)}$ above a threshold ($s=0.3$).}
+  \label{fig:calib}
+\end{figure*}
+
+The GP's Laplace posterior is the least calibrated supervised model here
+(ECE $0.047\pm0.006$ at $s=0.3$ and $0.039\pm0.002$ at $s=1$), and isotonic RF the
+best ($0.030$ and $0.010$). For selective prediction (Fig.~\ref{fig:calib}), the
+GP's probabilities are concentrated near the decision boundary: at threshold
+$u<0.3$ it keeps $69\%$ of test blocks at $97.6\%$ accuracy, while isotonic RF
+keeps $80\%$ at the same accuracy and AE-SVM $79\%$ at $97.8\%$; at $u<0.1$ the GP
+retains no blocks at all at $s=0.3$. A model-based posterior is attractive in
+principle, but on this data a cheaply recalibrated point estimator gives the
+better deferral policy.
+
+\subsection{Evasion and latency}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig7_adversarial.png}
+  \caption{Detection rate of attack blocks ($s=0.3$) whose five most RF-important features are moved a fraction (the budget) of the way toward the normal median, and the GP's mean uncertainty on them.}
+  \label{fig:adv}
 \end{figure}
-
-\subsection{Computational Performance}
-
-Table~\ref{tab:latency} reports inference latency. In production, the quantum kernel is not invoked at inference time---it is used only during periodic model recalibration or offline analysis due to its high per-sample cost. The deployed inference path follows Eq.~\ref{eq:deployed} using the Bayesian GP alone (feature extraction: 1.2ms, Bayesian GP: 5.8ms), yielding 7.0ms total deployed latency and $0.994$ accuracy. The research configuration (Eq.~\ref{eq:stacking}) would incur an additional 50ms per sample for quantum kernel evaluation plus 1.5ms for the meta-learner, making sub-10ms deployment infeasible---but as Table~\ref{tab:benchmark} shows, the two configurations are functionally equivalent in accuracy. RF inference is 0.9 ms---both more accurate and faster, which reframes HYQAD's value proposition around uncertainty quantification, not raw speed or accuracy.
 
 \begin{table}[t]
   \centering
-  \caption{Inference latency per sample (Intel i7, CPU, single-threaded). Quantum kernel and meta-learner are excluded from the deployed (GP-only) path (Eq.~\ref{eq:deployed}); they are shown for completeness of the research configuration.}
+  \caption{Inference latency on one CPU core (training excluded). Batch: amortised over 600 blocks. Single: median for one block, dominated by Python call overhead.}
   \label{tab:latency}
   \footnotesize
   \begin{tabular}{lrr}
     \toprule
-    \textbf{Component} & \textbf{Latency (ms)} & \textbf{vs.\ RF} \\
+    Component & Batch (ms/block) & Single (ms) \\
     \midrule
-    Feature extraction & 1.2 & --- \\
-    RF (200 trees) & 0.9 & 1.0$\times$ \\
-    Bayesian GP & 5.8 & 6.4$\times$ \\
-    Quantum kernel SVM (offline only) & 50.0 & 55.6$\times$ \\
-    Meta-learner & 1.5 & 1.7$\times$ \\
-    \textbf{Deployed pipeline (GP only)} & \textbf{7.0} & \textbf{7.8$\times$} \\
+    Feature map & $0.0004$ & $0.14$ \\
+    AE-SVM (exact) & $0.008$ & $0.35$ \\
+    RBF-SVM & $0.012$ & $0.16$ \\
+    RF (200 trees) & $0.093$ & $23.4$ \\
+    Hybrid & $0.33$ & $26.9$ \\
+    GP & $0.38$ & $29.6$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\FloatBarrier
+A simple gradient-free evasion that moves each attack block's five most
+important features toward the normal median (Fig.~\ref{fig:adv}) lowers RF and
+GP detection together, with RF ahead by 2--9 points at every budget at $s=0.3$
+(2--10 points at $s=1$). The GP's
+mean uncertainty on evading blocks barely changes ($0.30$ to $0.33$ at $s=0.3$),
+so uncertainty alone does not flag this evasion. Table~\ref{tab:latency}
+gives inference cost: all detectors are far below a per-block budget measured
+in seconds; the kernel SVMs are cheapest in batch, and the GP and Hybrid models
+are slowest.
+
+\section{Limitations}
+\label{sec:limits}
+
+Every result is from simulation. The attack magnitudes are assumptions, and the
+drift model, though grounded in standard channel physics, is not fitted to a
+deployed link; the strength axis $s$ shows how conclusions move with signature
+size but does not say which $s$ a real attacker produces. The evasion attack is
+gradient-free and not adaptive. The detectors see per-block summaries only;
+time-series models over consecutive blocks may do better. Validating the
+ranking of methods, and the zero-day mechanism, on telemetry from a physical QKD
+testbed is the necessary next step.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented HYQAD, a calibrated uncertainty quantification framework for QKD anomaly detection. The deployed inference path (Bayesian GP alone, Eq.~\ref{eq:deployed}) achieves $0.994 \pm 0.002$ accuracy with sub-10ms latency and calibrated predictive uncertainty enabling selective prediction. The research configuration (full stacking including the quantum kernel, Eq.~\ref{eq:stacking}) achieves $0.934 \pm 0.081$ accuracy---the large CI reflects instability from the quantum kernel's unreliability at $n = 25$, with the meta-learner matching the GP-only path on 4/5 seeds but collapsing on one. This finding confirms that the simpler GP-only pipeline is strictly preferable on accuracy, latency, and stability grounds.
-
-A matched-$n$ ablation (Section~\ref{sec:matched_n}) resolves the confounding present in prior ablation studies by training all models at identical sample sizes. The quantum kernel, limited to $n \leq 25$ by $\mathcal{O}(n^2)$ circuit simulation on classical hardware, remains near baseline performance across all tested $n$, confirming that its poor performance is intrinsic rather than a training-size artifact. We demonstrate quantum kernel advantage on classically-hard synthetic problems, establishing that the approach is architecturally sound but currently scale-limited.
-
-Several limitations must be acknowledged. First, RF achieves perfect separability, indicating the synthetic data is too easily separable---experimental validation on physical QKD testbeds is essential. Second, attack perturbation magnitudes are modeling assumptions rather than experimentally calibrated parameters; our sensitivity analysis (Fig.~\ref{fig:sensitivity}) characterizes performance across perturbation strengths. Third, the adversarial robustness evaluation uses simple gradient-free evasion; more sophisticated adaptive attacks warrant further study. Fourth, while the GP's calibration (ECE $=0.047 \pm 0.002$ over 10 seeds, Section~\ref{sec:results}) is confirmed accurate and substantially better than the quantum kernel's or Random Forest's \emph{raw} probabilities, a cheaply isotonic-calibrated Random Forest matches or exceeds it on this specific metric (ECE $=0.002$)---so the GP's advantage should be understood as a principled, model-based uncertainty signal RF does not natively provide, not as the only route to good empirical calibration on this data.
-
-Our primary contribution is a principled uncertainty quantification pipeline for QKD security monitoring: the Bayesian GP's calibrated uncertainty enables selective prediction (accuracy $1.000$ at $89.7\%$ coverage) and flags low-confidence evasions for operator review. The quantum component is documented as a scale-limited component under active investigation. For the quantum kernel to become net-positive, three conditions must hold: (i) training set sizes large enough ($n \gg 10^3$) enabled by hardware-accelerated quantum processing---classical random-feature kernel approximations~\cite{rahimi2007random} achieve comparable large-$n$ scaling without quantum hardware, which any quantum kernel deployment must outperform to justify its cost, (ii) feature spaces where classical kernels fail but quantum Hilbert space separations exist---we provide a controlled demonstration of this in our crossover analysis, and (iii) per-circuit latency reduced from milliseconds to microseconds. Future work includes experimental testbed validation on physical QKD hardware, adaptive GP-based thresholding, FPGA pipeline optimization, and larger-scale benchmarks with real QKD telemetry.
+On a QKD telemetry simulator designed not to be trivially separable, random
+forests are the strongest and most sample-efficient detector, isotonic
+calibration gives better uncertainty for deferral than a GP posterior, and the
+amplitude-encoding fidelity kernel---computable exactly on classical
+hardware---is competitive but not superior. Its one distinctive behavior is
+explained by Proposition~\ref{prop:exact}: it generalizes to unseen attacks only
+when some feature carries the input's magnitude, and a norm anchor supplies that
+when no such feature exists. Simulation-based QKD detection studies should
+report single-feature separability and an attack-strength sweep alongside
+headline accuracy.
 
 \section*{Code and Data Availability}
-The full implementation (QKD channel and attack simulation, feature engineering, Bayesian GP and quantum kernel models, and all benchmark/ablation scripts) and the experiment result files backing every table and figure in this paper are available at \url{https://github.com/arnavk23/quasar-security}.
+Simulator, models, experiment driver (\texttt{scripts/hyqad/run\_experiments.py}),
+figure script and every result CSV are at
+\url{https://github.com/arnavk23/quasar-security}.
 
 \bibliographystyle{IEEEtran}
-\begin{thebibliography}{00}
-
-\bibitem{bennett1984quantum}
-C.~H.~Bennett and G.~Brassard, ``Quantum cryptography: Public key distribution and coin tossing,'' in \textit{Proc. IEEE Int. Conf. Comput. Syst. Signal Process.}, 1984, pp.~175--179.
-
-\bibitem{gisin2002quantum}
-N.~Gisin, G.~Ribordy, W.~Tittel, and H.~Zbinden, ``Quantum cryptography,'' \textit{Rev. Mod. Phys.}, vol.~74, no.~1, pp.~145--195, 2002.
-
-\bibitem{lo2005decoy}
-H.-K.~Lo, X.~Ma, and K.~Chen, ``Decoy state quantum key distribution,'' \textit{Phys. Rev. Lett.}, vol.~94, no.~23, p.~230504, 2005.
-
-\bibitem{l0mti2005attacks}
-V.~L\"{u}tkenhaus and M.~Jahma, ``Quantum key distribution with realistic states: Photon-number splitting attacks and their impact,'' \textit{New J. Phys.}, vol.~4, p.~44, 2002.
-
-\bibitem{scarani2009security}
-V.~Scarani, H.~Bechmann-Pasquinucci, N.~J.~Cerf, M.~Du\v{s}ek, N.~L\"{u}tkenhaus, and M.~Peev, ``The security of practical quantum key distribution,'' \textit{Rev. Mod. Phys.}, vol.~81, no.~3, pp.~1301--1350, 2009.
-
-\bibitem{huttner1995photon}
-B.~Huttner, N.~Imoto, N.~Gisin, and T.~Mor, ``Quantum cryptography with coherent states,'' \textit{Phys. Rev. A}, vol.~51, no.~3, pp.~1863--1869, 1995.
-
-\bibitem{makarov2006detector}
-V.~Makarov, A.~Anisimov, and J.~Skaar, ``Effects of detector efficiency mismatch on security of quantum cryptosystems,'' \textit{Phys. Rev. A}, vol.~74, no.~2, p.~022313, 2006.
-
-\bibitem{larger2009controlling}
-L.~Lydersen, C.~Wiechers, C.~Wittmann, D.~Elser, J.~Skaar, and V.~Makarov, ``Hacking commercial quantum cryptography systems by tailored bright illumination,'' \textit{Nat. Photonics}, vol.~4, pp.~686--689, 2010.
-
-\bibitem{gisin2006trojan}
-N.~Gisin, S.~Fasel, B.~Kraus, H.~Zbinden, and G.~Ribordy, ``Trojan-horse attacks on quantum-key-distribution systems,'' \textit{Phys. Rev. A}, vol.~73, no.~2, p.~022320, 2006.
-
-\bibitem{bennett1992experimental}
-C.~H.~Bennett, F.~Bessette, G.~Brassard, L.~Salvail, and J.~Smolin, ``Experimental quantum cryptography,'' \textit{J. Cryptol.}, vol.~5, no.~1, pp.~3--28, 1992.
-
-\bibitem{jain2014detector}
-N.~Jain, E.~Anisimov, E.~Makarov, and C.~R.~M\"{u}ller, ``Detector-control attacks in quantum key distribution: A comprehensive study,'' \textit{Phys. Rev. A}, vol.~90, no.~2, p.~022316, 2014.
-
-\bibitem{ren2021machine}
-Z.~Ren, Y.-P.~Chen, J.-Y.~Liu, H.-J.~Ding, and Q.~Wang, ``Implementation of machine learning in quantum key distributions,'' \textit{IEEE Commun. Lett.}, vol.~25, no.~3, pp.~940--944, 2021.
-
-\bibitem{liu2021qkd}
-Y.~Liu and Z.~Zhang, ``A deep learning approach for multi-attack classification in QKD systems,'' \textit{Quantum Eng.}, vol.~3, no.~2, p.~e68, 2021.
-
-\bibitem{mao2020detecting}
-Y.~Mao, W.~Huang, H.~Zhong, Y.~Wang, H.~Qin, Y.~Guo, and D.~Huang, ``Detecting quantum attacks: a machine learning based defense strategy for practical continuous-variable quantum key distribution,'' \textit{New J. Phys.}, vol.~22, p.~083073, 2020.
-
-\bibitem{havlicek2019supervised}
-V.~Havl\'{i}\v{c}ek \textit{et al.}, ``Supervised learning with quantum-enhanced feature spaces,'' \textit{Nature}, vol.~567, pp.~209--212, 2019.
-
-\bibitem{schuld2019quantum}
-M.~Schuld and F.~Petruccione, \textit{Machine Learning with Quantum Computers}. Springer, 2021.
-
-\bibitem{liu2021quantum}
-Y.~Liu \textit{et al.}, ``Quantum advantage of kernel methods,'' \textit{Phys. Rev. Lett.}, vol.~126, no.~13, p.~130501, 2021.
-
-\bibitem{biamonte2017quantum}
-J.~Biamonte, P.~Wittek, N.~Pancotti, P.~Rebentrost, N.~Wiebe, and S.~Lloyd, ``Quantum machine learning,'' \textit{Nature}, vol.~549, pp.~195--202, 2017.
-
-\bibitem{bergholm2018pennylane}
-V.~Bergholm \textit{et al.}, ``PennyLane: Automatic differentiation of hybrid quantum-classical computations,'' arXiv:1811.04968, 2018.
-
-\bibitem{honz2019detection}
-P.~Honz, J.~M.~Silva, and A.~R.~da~Silva, ``Hardware-level detection of QKD detector blinding attacks,'' \textit{Opt. Express}, vol.~27, no.~8, pp.~11~555--11~569, 2019.
-
-\bibitem{hari2020detection}
-S.~Hari, V.~Ojha, and S.~Chatterjee, ``Real-time detection of QKD implementation attacks via optical power monitoring,'' \textit{IEEE J. Quantum Electron.}, vol.~56, no.~6, pp.~1--9, 2020.
-
-\bibitem{shin2021channe}
-S.~Shin and K.~Tamaki, ``Channel parameter estimation for QKD security analysis,'' \textit{Phys. Rev. A}, vol.~103, no.~2, p.~022608, 2021.
-
-\bibitem{huang2021power}
-H.-Y.~Huang \textit{et al.}, ``Power of data in quantum machine learning,'' \textit{Nat. Commun.}, vol.~12, p.~2631, 2021.
-
-\bibitem{kennedy2020bayesian}
-J.~Kennedy and D.~A.~Jones, ``Bayesian approaches to anomaly detection: A review,'' \textit{Stat. Sci.}, vol.~35, no.~4, pp.~585--606, 2020.
-
-\bibitem{rasmussen2006gaussian}
-C.~E.~Rasmussen and C.~K.~I.~Williams, \textit{Gaussian Processes for Machine Learning}. MIT Press, 2006.
-
-\bibitem{rousseeuw1999fast}
-P.~J.~Rousseeuw and K.~Van~Driessen, ``A fast algorithm for the minimum covariance determinant estimator,'' \textit{Technometrics}, vol.~41, no.~3, pp.~212--223, 1999.
-
-\bibitem{wolpert1992stacked}
-D.~H.~Wolpert, ``Stacked generalization,'' \textit{Neural Netw.}, vol.~5, no.~2, pp.~241--259, 1992.
-
-\bibitem{rahimi2007random}
-A.~Rahimi and B.~Recht, ``Random features for large-scale kernel machines,'' in \textit{Proc. NeurIPS}, 2007, pp.~1177--1184.
-
-\bibitem{breiman2001random}
-L.~Breiman, ``Random forests,'' \textit{Mach. Learn.}, vol.~45, no.~1, pp.~5--32, 2001.
-
-\bibitem{guo2017calibration}
-C.~Guo, G.~Pleiss, Y.~Sun, and K.~Q.~Weinberger, ``On calibration of modern neural networks,'' in \textit{Proc. ICML}, PMLR vol.~70, 2017, pp.~1321--1330.
-
-\bibitem{zadrozny2002transforming}
-B.~Zadrozny and C.~Elkan, ``Transforming classifier scores into accurate multiclass probability estimates,'' in \textit{Proc. ACM SIGKDD}, 2002, pp.~694--699.
-
-\bibitem{lo2012measurement}
-H.-K.~Lo, M.~Curty, and B.~Qi, ``Measurement-device-independent quantum key distribution,'' \textit{Phys. Rev. Lett.}, vol.~108, no.~13, p.~130503, 2012.
-
-\bibitem{liao2017satellite}
-S.-K.~Liao \textit{et al.}, ``Satellite-to-ground quantum key distribution,'' \textit{Nature}, vol.~549, pp.~43--47, 2017.
-
-\bibitem{lucamarini2018overcoming}
-M.~Lucamarini, Z.~L.~Yuan, J.~F.~Dynes, and A.~J.~Shields, ``Overcoming the rate--distance limit of quantum key distribution without quantum repeaters,'' \textit{Nature}, vol.~557, pp.~400--403, 2018.
-
-\bibitem{preskill2018quantum}
-J.~Preskill, ``Quantum computing in the NISQ era and beyond,'' \textit{Quantum}, vol.~2, p.~79, 2018.
-
-\end{thebibliography}
+\bibliography{../references}
 
 \end{document}
