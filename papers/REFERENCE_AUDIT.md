@@ -1,6 +1,6 @@
 # Reference audit (2026-10-13)
 
-Every reference in `papers/hyqad/paper.tex` and `papers/qztna/qcyber.tex` was
+Every reference in the two conference drafts (since removed from the repository) was
 checked. Classic, widely cited works were verified from their standard
 bibliographic records; anything uncertain was checked by web search. Entries
 that could not be found as cited were **removed or replaced** — a fabricated

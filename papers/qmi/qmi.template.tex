@@ -1,33 +1,27 @@
-\documentclass[11pt]{article}
+\documentclass[pdflatex,sn-mathphys-num,lineno]{sn-jnl}
 
-\usepackage[margin=1in]{geometry}
-\usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm}
 \usepackage{booktabs}
-\usepackage[numbers,sort&compress]{natbib}
-\usepackage{lineno}
 \usepackage{xcolor}
-\usepackage{hyperref}
 
-\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
 \graphicspath{{../../figures/}}
 \renewcommand{\arraystretch}{1.12}
+\theoremstyle{thmstyleone}
 \newtheorem{proposition}{Proposition}
 \newtheorem{corollary}{Corollary}
-\linenumbers
-
-\title{The Norm Blind Spot of Amplitude-Encoding Quantum Kernels in Anomaly Detection}
-\author{Arnav Kapoor\\[2pt]
-\small Department of Computer Science, Indian Institute of Science Education and Research Bhopal,\\
-\small Bhopal 462066, India. \texttt{arnavkapoor23@iiserb.ac.in}}
-\date{}
+\raggedbottom
 
 \begin{document}
-\maketitle
 
-\begin{abstract}
-\noindent
-Amplitude encoding is a common way to load classical data into quantum kernel
+\title[Norm Blind Spot of Amplitude-Encoding Kernels]{The Norm Blind Spot of Amplitude-Encoding Quantum Kernels in Anomaly Detection}
+
+\author*[1]{\fnm{Arnav} \sur{Kapoor}}\email{arnavkapoor23@iiserb.ac.in}
+
+\affil*[1]{\orgdiv{Department of Computer Science}, \orgname{Indian Institute of Science Education and Research Bhopal}, \orgaddress{\city{Bhopal}, \postcode{462066}, \state{Madhya Pradesh}, \country{India}}}
+
+\abstract{Amplitude encoding is a common way to load classical data into quantum kernel
 methods. We show that any kernel machine built on it scores an input by a
 Rayleigh quotient of a learned matrix. The score depends on the direction of the
 input and never on its norm. We ask when this bias helps anomaly detection. We
@@ -43,12 +37,11 @@ accuracy. On UNSW-NB15 and CIC-IDS2017 the plain kernel does not fail.
 @QMI_ABS_ZZ@ @QMI_ABS_SHOTS@ A simple norm statistic does not predict when the
 failure occurs. Quantum kernels should be checked for their invariances and tested
 on held-out classes from real data, against classical kernels trained at the same
-scale.
-\end{abstract}
+scale.}
 
-\noindent\textbf{Keywords} Quantum kernels $\cdot$ Amplitude encoding $\cdot$
-Inductive bias $\cdot$ Anomaly detection $\cdot$ Quantum key distribution $\cdot$
-Benchmarking
+\keywords{Quantum kernels, Amplitude encoding, Inductive bias, Anomaly detection, Quantum key distribution, Benchmarking}
+
+\maketitle
 
 \section{Introduction}
 
@@ -363,7 +356,7 @@ and data preparation are public (see Declarations).
 
 \subsection{In-distribution detection}
 
-\begin{table}[t]
+\begin{sidewaystable}
   \centering
   \caption{In-distribution detection (mean $\pm$ 95\% CI over seeds). QKD uses
   $s=0.3$ and $n=1400$. Bold marks the best mean per column. A dash means not run.}
@@ -379,7 +372,7 @@ and data preparation are public (see Declarations).
 @INDIST_ROWS@
     \bottomrule
   \end{tabular}
-\end{table}
+\end{sidewaystable}
 
 AE-SVM never beats RBF-SVM in distribution (Table~\ref{tab:indist}). On QKD data
 their MCCs are 0.814 and 0.810, and McNemar's test finds no significant seed. On
@@ -443,15 +436,15 @@ Corollary~\ref{cor:inv} requires.
 
 \begin{table}[t]
   \centering
-  \caption{Mean ROC-AUC on held-out attack types. ``No Mahal.'' removes the only QKD
-  feature that carries magnitude. Bold marks the best per column. A dash means not
+  \caption{Mean ROC-AUC on held-out attack types. QKD uses $s=0.3$. ``No Mahal.''
+  removes the only QKD feature that carries magnitude. Bold marks the best per column. A dash means not
   run.}
   \label{tab:zd}
   \small
   \setlength{\tabcolsep}{4pt}
   \begin{tabular}{lccccc}
     \toprule
-    Model & QKD ($s=0.3$) & QKD, no Mahal. & Synthetic flows & UNSW-NB15 & CIC-IDS2017 \\
+    Model & QKD & QKD, no Mahal. & Synthetic & UNSW-NB15 & CIC-IDS2017 \\
     \midrule
 @CB_T_ZD@
     \bottomrule
@@ -700,21 +693,28 @@ failure does not appear. An eight-qubit ZZ feature map with tuned bandwidth avoi
 the blind spot but did not beat tuned classical kernels. Encodings should be chosen and tested for their
 invariances, on real held-out classes, against classical kernels at the same scale.
 
+\backmatter
+
+\bmhead{Acknowledgements}
+Not applicable.
+
 \section*{Declarations}
 
-\textbf{Funding.} No funding was received for this work.
+\begin{itemize}
+\item \textbf{Funding.} No funding was received for this work.
+\item \textbf{Competing interests.} The author has no competing interests to declare.
+\item \textbf{Ethics approval and consent to participate.} Not applicable.
+\item \textbf{Consent for publication.} Not applicable.
+\item \textbf{Data availability.} UNSW-NB15 and CIC-IDS2017 are publicly available from
+  their original providers. The simulators that generate the QKD and synthetic flow
+  data, and all result files, are at \url{https://github.com/arnavk23/quasar-security}.
+\item \textbf{Materials availability.} Not applicable.
+\item \textbf{Code availability.} All code is at
+  \url{https://github.com/arnavk23/quasar-security}.
+\item \textbf{Author contributions.} A.K. designed the study, wrote the code, ran the
+  experiments and wrote the manuscript.
+\end{itemize}
 
-\textbf{Competing interests.} The author has no competing interests to declare.
-
-\textbf{Code and data availability.} Code, both simulators, dataset preparation
-scripts and all result files are at
-\url{https://github.com/arnavk23/quasar-security}. UNSW-NB15 and CIC-IDS2017 are
-publicly available from their original providers.
-
-\textbf{Author contributions.} A.K. designed the study, wrote the code, ran the
-experiments and wrote the manuscript.
-
-\bibliographystyle{unsrtnat}
 \bibliography{../references}
 
 \end{document}

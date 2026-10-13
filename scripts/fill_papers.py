@@ -169,7 +169,7 @@ def fill_combined(d):
 
 
 def fill_qztna(d):
-    """Tables and numbers for papers/qztna/qcyber.template.tex (no semicolons in output)."""
+    """Synthetic-flow and public-data tables (QZ_*) used by the merged papers (no semicolons in output)."""
     out = {}
     syn, real = d["syn"], d["real"]
     DS = ("UNSW-NB15", "CIC-IDS2017")
@@ -264,7 +264,7 @@ def fill_qztna(d):
 
 
 def fill_hyqad(d):
-    """Tables for papers/hyqad/paper.template.tex (no semicolons in output)."""
+    """QKD telemetry tables (HY_*) used by the merged papers (no semicolons in output)."""
     out = {}
     hy = d["hy"]
     ATT = ["pns", "detector_blinding", "trojan_horse", "intercept_resend"]
@@ -556,8 +556,6 @@ if __name__ == "__main__":
     if rr is not None:
         vals["REAL_ROWS"] = rr
     for tpl, out in ((ROOT / "papers/combined/quasar.template.tex", ROOT / "papers/combined/quasar.tex"),
-                     (ROOT / "papers/qztna/qcyber.template.tex", ROOT / "papers/qztna/qcyber.tex"),
-                     (ROOT / "papers/hyqad/paper.template.tex", ROOT / "papers/hyqad/paper.tex"),
                      (ROOT / "papers/qmi/qmi.template.tex", ROOT / "papers/qmi/qmi.tex")):
         if tpl.exists():
             out.write_text(tpl.read_text())

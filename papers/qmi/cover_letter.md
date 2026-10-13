@@ -16,14 +16,7 @@ We think the paper suits the journal because it gives an exact account of an enc
 inductive bias and tests it carefully against classical kernels. That kind of
 benchmarking is increasingly asked for in quantum machine learning.
 
-Related work by the author. A short conference paper on the network-flow part of this
-study [TITLE, VENUE, STATUS] has been submitted. The present manuscript extends it with
-the QKD domain, the function-class analysis (Propositions 2 and 3), the explanation of
-the anchor constant, the entangling feature-map and finite-shot experiments, and the
-norm diagnostic. Overlapping text and tables are limited to [SECTIONS]. A copy can be
-provided to the editor on request.
-
-The manuscript is not under consideration elsewhere. Code and data preparation scripts
+The manuscript is original, has not been published, and is not under consideration elsewhere. Code and data preparation scripts
 are public at https://github.com/arnavk23/quasar-security.
 
 Sincerely,

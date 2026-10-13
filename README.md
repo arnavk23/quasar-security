@@ -24,11 +24,9 @@ Every compared model is trained on the same subsample at every training size, ov
 | Paper | Source | Notes |
 |---|---|---|
 | *The Norm Blind Spot of Amplitude-Encoding Quantum Kernels in Anomaly Detection* (Quantum Machine Intelligence version) | [`papers/qmi/qmi.tex`](papers/qmi/qmi.tex) | Merged paper reframed for a quantum-ML journal: Rayleigh-quotient analysis, anchor theory, ZZ feature map, finite shots |
-| *When Do Amplitude-Encoding Quantum Kernels Help Security Anomaly Detection?* (merged journal version) | [`papers/combined/quasar.tex`](papers/combined/quasar.tex) | Both domains, public datasets, mechanism and fix |
-| *Calibrated and Kernel-Based Detection of QKD Implementation Attacks in a Controlled Simulation* | [`papers/hyqad/paper.tex`](papers/hyqad/paper.tex) | Conference version |
-| *Amplitude-Encoding Kernels for Zero-Trust Network Anomaly Detection* | [`papers/qztna/qcyber.tex`](papers/qztna/qcyber.tex) | Conference version |
+| *When Do Amplitude-Encoding Quantum Kernels Help Security Anomaly Detection?* (earlier IEEE-format draft) | [`papers/combined/quasar.tex`](papers/combined/quasar.tex) | Superseded by the QMI version |
 
-All four cite [`papers/references.bib`](papers/references.bib); every entry was checked, see [`papers/REFERENCE_AUDIT.md`](papers/REFERENCE_AUDIT.md).
+Both cite [`papers/references.bib`](papers/references.bib); every entry was checked, see [`papers/REFERENCE_AUDIT.md`](papers/REFERENCE_AUDIT.md).
 
 ## Installation
 

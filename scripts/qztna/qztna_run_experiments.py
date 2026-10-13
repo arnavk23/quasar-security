@@ -1,10 +1,10 @@
 """
-Real experiment driver for the Q-ZTNA paper (papers/qztna/qcyber.tex).
+Experiment driver for the synthetic-flow results in papers/qmi/qmi.tex.
 
 Replaces the previous hardcoded-array figure script with genuine trained
 models on genuinely simulated network flow data. Every CSV written here is
 read directly by scripts/qztna/qztna_gen_figures.py to produce the paper
-figures, and the same numbers are what papers/qztna/qcyber.tex reports.
+figures, and the same numbers are what papers/qmi/qmi.tex reports.
 """
 
 import time
