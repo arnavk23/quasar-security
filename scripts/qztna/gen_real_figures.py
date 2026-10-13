@@ -134,8 +134,58 @@ def fig18_real_matched_n():
     save(fig, "fig18_real_matched_n.png")
 
 
+def fig1_framework():
+    from matplotlib.patches import FancyBboxPatch
+    fig = plt.figure(figsize=(COL_W, 1.6))
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.set_xlim(0, 10); ax.set_ylim(0, 4); ax.axis("off"); ax.grid(False)
+    steps = [("Flow features", "standardize"), ("Encoding", "plain or\nnorm-anchored"),
+             ("Kernel SVM", "Nystr\u00f6m,\nPlatt scaling"), ("Decision", "alert, certify\nor defer")]
+    for k, (title, body) in enumerate(steps):
+        x = 0.1 + k * 2.5
+        ax.add_patch(FancyBboxPatch((x, 0.4), 2.1, 3.0, boxstyle="round,pad=0.04", fc="#f4f3f0", ec=MUTED, lw=0.7))
+        ax.text(x + 1.05, 2.75, title, ha="center", va="center", fontsize=6.5, fontweight="bold", color=INK)
+        ax.text(x + 1.05, 1.45, body, ha="center", va="center", fontsize=5.8, color=MUTED, linespacing=1.3)
+        if k < 3:
+            ax.annotate("", xy=(x + 2.45, 1.9), xytext=(x + 2.15, 1.9),
+                        arrowprops=dict(arrowstyle="-|>", color=INK, lw=0.8))
+    save(fig, "fig1_framework_qztna.png")
+
+
+def fig8_confusion():
+    cm = pd.read_csv(DATA / "qztna_confusion.csv", index_col=0) * 100
+    labels = ["Normal"] + [SYN_LABEL[a] for a in cm.index[1:]]
+    fig, ax = plt.subplots(figsize=(COL_W, 2.6))
+    ax.grid(False)
+    im = ax.imshow(cm.values, cmap="Blues", vmin=0, vmax=100)
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            v = cm.values[i, j]
+            ax.text(j, i, f"{v:.0f}", ha="center", va="center", fontsize=6, color="white" if v > 60 else INK)
+    ax.set_xticks(range(len(labels)), labels, rotation=30, ha="right")
+    ax.set_yticks(range(len(labels)), labels)
+    ax.set_xlabel("Predicted class")
+    ax.set_ylabel("True class")
+    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03, label="% of true class")
+    save(fig, "fig8_confusion.png")
+
+
+def fig11_uncertainty():
+    u = pd.read_csv(DATA / "qztna_uncertainty.csv")
+    fig, ax = plt.subplots(figsize=(COL_W, 2.0))
+    ax.plot(u.coverage, u.accuracy, color=STYLE["AE-SVM"]["color"], marker="o")
+    for tau in (0.10, 0.31):
+        r = u.iloc[(u.threshold - tau).abs().argmin()]
+        ax.annotate(f"u < {r.threshold:.2f}", (r.coverage, r.accuracy), textcoords="offset points",
+                    xytext=(6, 4), fontsize=6.5, color=MUTED)
+    ax.set_xlabel("Coverage (fraction of flows not deferred)")
+    ax.set_ylabel("Accuracy on kept flows")
+    save(fig, "fig11_uncertainty.png")
+
+
 if __name__ == "__main__":
-    for f in (fig6_zeroday, fig16_real_detection, fig17_real_zeroday, fig18_real_matched_n):
+    for f in (fig1_framework, fig6_zeroday, fig8_confusion, fig11_uncertainty, fig16_real_detection,
+              fig17_real_zeroday, fig18_real_matched_n):
         try:
             f()
         except FileNotFoundError as e:

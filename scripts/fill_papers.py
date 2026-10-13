@@ -168,6 +168,101 @@ def fill_combined(d):
     return out
 
 
+def fill_qztna(d):
+    """Tables and numbers for papers/qztna/qcyber.template.tex (no semicolons in output)."""
+    out = {}
+    syn, real = d["syn"], d["real"]
+    DS = ("UNSW-NB15", "CIC-IDS2017")
+
+    # in-distribution table
+    cols = [(syn, "accuracy"), (syn, "auc")] + [(real[real.dataset == ds], m) for ds in DS for m in ("f1", "auc")]
+    best = [f.groupby("model")[m].mean().max() for f, m in cols]
+    rows = []
+    for name in ["AE-SVM", "AE-SVM (anchored)", "AE-SVM (nonneg)", "RBF-SVM", "Laplacian-SVM", "Poly-SVM",
+                 "RF", "XGBoost", "MLP", "DNN", "Autoencoder"]:
+        cells = []
+        for (f, m), b in zip(cols, best):
+            v = f[f.model == name][m]
+            cells.append("--" if v.empty else cell(v, bold=abs(v.mean() - b) < 5e-4))
+        if any(c != "--" for c in cells):
+            rows.append(f"    {name} & " + " & ".join(cells) + r" \\")
+    out["QZ_T_INDIST"] = "\n".join(rows)
+
+    # scale table: AE minus RBF in percentage points
+    mn = pd.read_csv(QZ / "qztna_matched_n.csv").groupby(["n", "kernel"]).accuracy.mean().unstack()
+    dm = pd.read_csv(QZ / "qztna_dimensionality.csv").groupby(["d", "model"]).accuracy.mean().unstack()
+    gn = (mn["ae"] - mn["rbf"]) * 100
+    gd = (dm["AE-SVM"] - dm["RBF-SVM"]) * 100
+    pad = lambda xs, k: list(xs) + [""] * (k - len(xs))
+    fmt = lambda v: f"${v:+.1f}$"
+    out["QZ_T_SCALE"] = "\n".join([
+        "    $n$ & " + " & ".join(str(int(n)) for n in gn.index) + r" \\",
+        "    Gap & " + " & ".join(fmt(v) for v in gn.values) + r" \\",
+        r"    \midrule",
+        "    $d$ & " + " & ".join(pad([str(int(x)) for x in gd.index], len(gn))) + r" \\",
+        "    Gap & " + " & ".join(pad([fmt(v) for v in gd.values], len(gn))) + r" \\",
+    ])
+
+    # zero-day table
+    sz, rz = d["synz"], d["realz"]
+    zcols = [sz] + [rz[rz.dataset == ds] for ds in DS]
+    zbest = [f.groupby(["model", "held_out"]).auc.mean().groupby("model").mean().max() for f in zcols]
+    rows = []
+    for name in ["AE-SVM", "AE-SVM (nonneg)", "AE-SVM (anchored)", "RBF-SVM", "RF", "XGBoost", "DNN", "Autoencoder"]:
+        cells = []
+        for f, b in zip(zcols, zbest):
+            v = mean_zd(f, name)
+            cells.append("--" if np.isnan(v) else (f"$\\mathbf{{{v:.3f}}}$" if abs(v - b) < 5e-4 else f"${v:.3f}$"))
+        rows.append(f"    {name} & " + " & ".join(cells) + r" \\")
+    out["QZ_T_ZD"] = "\n".join(rows)
+    ae = {ds: mean_zd(rz[rz.dataset == ds], "AE-SVM") for ds in DS}
+    rb = {ds: mean_zd(rz[rz.dataset == ds], "RBF-SVM") for ds in DS}
+    out["QZ_ABS_REAL"] = (f"${ae[DS[0]]:.3f}$ against ${rb[DS[0]]:.3f}$ for RBF-SVM on UNSW-NB15 and "
+                          f"${ae[DS[1]]:.3f}$ against ${rb[DS[1]]:.3f}$ on CIC-IDS2017")
+
+    # anchor sweep
+    sw = pd.read_csv(QZ / "qztna_anchor_sweep.csv")
+    order = ["0", "1", "2", "4", "8", "16", "32", "median"]
+    m = sw.groupby(["c", "seed", "held_out"]).auc.mean().groupby("c").mean()
+    out["QZ_T_SWEEP"] = "\n".join([
+        "    $c$ & " + " & ".join("median" if c == "median" else c for c in order) + r" \\",
+        r"    \midrule",
+        "    AUC & " + " & ".join(f"${m[c]:.3f}$" for c in order) + r" \\",
+    ])
+
+    # alignment
+    sa = pd.read_csv(QZ / "qztna_kernel_alignment.csv").groupby("kernel").alignment.mean()
+    ra = d["reala"].groupby(["dataset", "kernel"]).alignment.mean()
+    rows = []
+    for label, sk, rk in (("AE", "AE-SVM", "AE"), ("AE (nonneg)", None, "AE (nonneg)"),
+                          ("RBF", "RBF-SVM", "RBF"), ("Laplacian", "Laplacian-SVM", "Laplacian")):
+        cells = [f"${sa[sk]:.2f}$" if sk else "--"] + [f"${ra[(ds, rk)]:.2f}$" for ds in DS]
+        rows.append(f"    {label} & " + " & ".join(cells) + r" \\")
+    out["QZ_T_ALIGN"] = "\n".join(rows)
+
+    # certification
+    c = pd.read_csv(QZ / "qztna_certified_radii.csv")
+    rows = []
+    for k in ("AE-SVM", "RBF-SVM"):
+        sub = c[c.model == k]
+        ok = sub[~sub.abstained]
+        rows.append(f"    {k} & ${ok.radius.mean():.3f}$ & ${sub.radius.median():.3f}$ & "
+                    f"${100 * sub.abstained.mean():.1f}\\%$ \\\\")
+    out["QZ_T_CERT"] = "\n".join(rows)
+
+    # latency
+    sl = pd.read_csv(QZ / "qztna_latency.csv").set_index("component").latency_ms
+    rl = d["reall"].set_index(["dataset", "model"]).batch_ms_per_flow
+    syn_name = {"AE-SVM": "AE-SVM (Nystrom)", "RBF-SVM": "RBF-SVM (Nystrom)", "RF": "Random Forest", "MLP": "MLP"}
+    rows = []
+    for name in ["AE-SVM", "RBF-SVM", "RF", "XGBoost", "MLP", "DNN", "Autoencoder"]:
+        cells = [f"${sl[syn_name[name]]:.4f}$" if name in syn_name else "--"]
+        cells += [f"${rl[(ds, name)]:.4f}$" for ds in DS]
+        rows.append(f"    {name} & " + " & ".join(cells) + r" \\")
+    out["QZ_T_LAT"] = "\n".join(rows)
+    return out
+
+
 def real_rows(d):
     real = d["real"]
     if real is None:
@@ -203,6 +298,7 @@ def substitute(path, values):
 if __name__ == "__main__":
     d = load()
     vals = fill_combined(d)
+    vals.update(fill_qztna(d))
     rr = real_rows(d)
     if rr is not None:
         vals["REAL_ROWS"] = rr
