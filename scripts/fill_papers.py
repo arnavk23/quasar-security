@@ -466,8 +466,7 @@ def fill_qmi_tables():
         sub = df[(df.model == m) & (df.shots == 1000)].set_index(key)
         d1000[m] = (sub[["auc_indist", "auc_heldout"]] - base.loc[sub.index]).groupby("domain").mean()
     worst1000 = -min(v.min().min() for v in d1000.values())
-    out["QMI_ABS_SHOTS"] = (f"Estimating every kernel entry from 1000 shots lowers mean AUC by at most "
-                            f"{worst1000:.3f} in any setting.")
+    out["QMI_ABS_SHOTS"] = "Estimating every kernel entry from 1000 shots barely changes detection performance."
     out["QMI_ZZ_TEXT"] = (
         "Table~\\ref{tab:zz} and Fig.~\\ref{fig:zz} compare five kernels on the same eight inputs. The ZZ map "
         "is not norm invariant. It does not share the failure of plain AE on synthetic flows "

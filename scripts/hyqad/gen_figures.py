@@ -47,7 +47,7 @@ plt.rcParams.update({
     "axes.edgecolor": MUTED, "axes.labelcolor": INK, "xtick.color": MUTED, "ytick.color": MUTED,
     "axes.grid": True, "grid.color": GRID, "grid.linewidth": 0.6, "axes.axisbelow": True,
     "axes.spines.top": False, "axes.spines.right": False,
-    "lines.linewidth": 1.5, "lines.markersize": 4.5, "savefig.dpi": 300,
+    "lines.linewidth": 1.5, "lines.markersize": 4.5, "savefig.dpi": 650,
     "legend.frameon": False,
 })
 COL_W, PAGE_W = 3.45, 7.1

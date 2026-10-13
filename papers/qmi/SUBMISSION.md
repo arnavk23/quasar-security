@@ -18,7 +18,7 @@ Everything below is ready to paste. Rebuild the package after any edit with
    read "Submission guidelines" for any rule not covered here, such as a word limit or
    the open-access fee.
 
-## Files to upload
+## Files
 
 All are in `papers/qmi/`.
 
@@ -34,21 +34,30 @@ If the system asks for a "main" or "primary" file, choose `main.tex`. If it asks
 file types, the PNGs are "Figure", the `.cls`, `.bst`, `.bib` and `.bbl` are "LaTeX
 supplementary" or "Other".
 
-## Steps
+## Steps (Snapp, the Springer Nature submission system)
 
-1. Go to https://link.springer.com/journal/42484 and click **Submit manuscript**.
-2. Log in or create an account with your IISER email.
-3. Article type: **Research article** (or "Original article").
-4. Paste the title, abstract and keywords below.
-5. Author: add yourself as the only and corresponding author, with your ORCID.
-6. Upload the files from the table above.
-7. Answer the declaration questions to match the paper.
-8. Suggested reviewers are optional. See the note below.
-9. Open-access option: if the journal offers a choice, the subscription route has no
-   article fee. Choosing open access does. Check the fee on the journal page before
-   choosing.
-10. Approve the PDF that the system builds. Check that all seven figures, both
-    propositions and the reference list appear. Then submit.
+1. Go to https://link.springer.com/journal/42484 and click **Submit manuscript**. Log in
+   or create an account with your IISER email. Add ORCID 0009-0007-9818-7908 to your
+   profile.
+2. **Manuscript file.** Click **Upload manuscript** and choose `papers/qmi/qmi_submission.zip`.
+   Snapp compiles the LaTeX into a PDF itself. Do not fill any field before this upload.
+   Snapp reads the title, abstract, author and statements from the file.
+3. **Figures and tables.** Skip. They are inside the ZIP. Separate high-resolution files
+   are only needed after acceptance. They are in `papers/qmi/submission/` (all at least
+   1500 x 1200 pixels).
+4. **Supplementary material.** Skip. The code and data are on GitHub.
+5. **Related files.** Skip. No overlapping paper is under consideration.
+6. **Check the extracted fields** against the "Form fields" section below. Fix anything
+   Snapp got wrong, especially the abstract, the affiliation and the data availability
+   statement.
+7. Article type: **Research article** (or "Original article").
+8. Paste the cover letter from `cover_letter.md` when asked.
+9. Answer the declaration questions to match the paper (no funding, no competing
+   interests, no ethics approval needed).
+10. Open-access option: if asked, the subscription route has no article fee. Open access
+    does. Check the fee before choosing.
+11. Open the PDF Snapp builds. Check that all seven figures, the propositions and the
+    reference list appear. Then submit.
 
 You will get a confirmation email with a manuscript number. Keep it.
 
@@ -60,8 +69,8 @@ The Norm Blind Spot of Amplitude-Encoding Quantum Kernels in Anomaly Detection
 **Running title** (if asked)
 Norm Blind Spot of Amplitude-Encoding Kernels
 
-**Abstract** (249 words)
-Amplitude encoding is a common way to load classical data into quantum kernel methods. We show that any kernel machine built on it scores an input by a Rayleigh quotient of a learned matrix. The score depends on the direction of the input and never on its norm. We ask when this bias helps anomaly detection. We test it on four security datasets from QKD telemetry and network flows, with every model trained on the same data at every sample size. In distribution the amplitude kernel never beats a Gaussian kernel, and it needs more data when samples are few. On attack types held out from training the outcome depends on the data. In both simulated settings the kernel fails, because unseen attacks differ from normal traffic mainly in norm. Appending one constant amplitude, set to the median training norm, repairs the failure. We explain why this constant works. Where the norm carries no signal, the anchor can cost accuracy. On UNSW-NB15 and CIC-IDS2017 the plain kernel does not fail. An eight-qubit ZZ feature map with tuned bandwidth is competitive with tuned classical kernels but is not the best on held-out attacks in any of six settings. Estimating every kernel entry from 1000 shots lowers mean AUC by at most 0.015 in any setting. A simple norm statistic does not predict when the failure occurs. Quantum kernels should be checked for their invariances and tested on held-out classes from real data, against classical kernels trained at the same scale.
+**Abstract** (245 words)
+Amplitude encoding is a common way to load classical data into quantum kernel methods. We show that any kernel machine built on it scores an input by a Rayleigh quotient of a learned matrix. The score depends on the direction of the input and never on its norm. We ask when this bias helps anomaly detection. We test it on four security datasets from quantum key distribution telemetry and network flows, with every model trained on the same data at every sample size. In distribution the amplitude kernel never beats a Gaussian kernel, and it needs more data when samples are few. On attack types held out from training the outcome depends on the data. In both simulated settings the kernel fails, because unseen attacks differ from normal traffic mainly in norm. Appending one constant amplitude, set to the median training norm, repairs the failure. We explain why this constant works. Where the norm carries no signal, the anchor can cost accuracy. On UNSW-NB15 and CIC-IDS2017 the plain kernel does not fail. An eight-qubit ZZ feature map with tuned bandwidth is competitive with tuned classical kernels but is not the best on held-out attacks in any of six settings. Estimating every kernel entry from 1000 shots barely changes detection performance. A simple norm statistic does not predict when the failure occurs. Quantum kernels should be checked for their invariances and tested on held-out classes from real data, against classical kernels trained at the same scale.
 
 **Keywords**
 Quantum kernels; Amplitude encoding; Inductive bias; Anomaly detection; Quantum key distribution; Benchmarking
@@ -79,7 +88,7 @@ The author has no competing interests to declare.
 Not applicable.
 
 **Data availability**
-UNSW-NB15 and CIC-IDS2017 are publicly available from their original providers. The simulators that generate the QKD and synthetic flow data, and all result files, are at https://github.com/arnavk23/quasar-security.
+UNSW-NB15 (Moustafa and Slay 2015, doi:10.1109/MilCIS.2015.7348942) is distributed by UNSW Canberra at https://research.unsw.edu.au/projects/unsw-nb15-dataset. CIC-IDS2017 (Sharafaldin et al. 2018, doi:10.5220/0006639801080116) is distributed by the Canadian Institute for Cybersecurity at https://www.unb.ca/cic/datasets/ids-2017.html. The QKD telemetry and synthetic flow data were generated by simulators at https://github.com/arnavk23/quasar-security, which also holds all result files.
 
 **Code availability**
 https://github.com/arnavk23/quasar-security

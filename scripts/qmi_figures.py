@@ -23,7 +23,7 @@ plt.rcParams.update({
     "xtick.labelsize": 7, "ytick.labelsize": 7, "axes.edgecolor": MUTED, "xtick.color": MUTED,
     "ytick.color": MUTED, "axes.grid": True, "grid.color": GRID, "grid.linewidth": 0.6,
     "axes.axisbelow": True, "axes.spines.top": False, "axes.spines.right": False,
-    "savefig.dpi": 300, "legend.frameon": False,
+    "savefig.dpi": 650, "legend.frameon": False,
 })
 DOMAINS = ["QKD", "QKD, centred Mahal.", "QKD, no Mahal.", "Synthetic flows", "UNSW-NB15", "CIC-IDS2017"]
 
