@@ -9,12 +9,11 @@ Everything below is ready to paste. Rebuild the package after any edit with
 1. **Merge the work into `main` and push.** The paper links to
    https://github.com/arnavk23/quasar-security. Reviewers will see the default branch
    `main`, which is still the old version.
-2. **Confirm your department name.** The paper says "Department of Computer Science".
-   Your older drafts disagreed. Use the exact name IISER Bhopal uses.
+2. **Department** is set to Department of Electrical Engineering and Computer Science.
 3. **Confirm the declarations** in the paper's Declarations section. They say no
    funding and no competing interests.
-4. **Get an ORCID iD** (free, https://orcid.org) if you do not have one. Most Springer
-   systems ask for it.
+4. **ORCID iD** 0009-0007-9818-7908. Enter it in your Springer account profile and on
+   the author step of the form.
 5. **Check the journal page once.** Open https://link.springer.com/journal/42484 and
    read "Submission guidelines" for any rule not covered here, such as a word limit or
    the open-access fee.
@@ -66,6 +65,9 @@ Amplitude encoding is a common way to load classical data into quantum kernel me
 
 **Keywords**
 Quantum kernels; Amplitude encoding; Inductive bias; Anomaly detection; Quantum key distribution; Benchmarking
+
+**Author**
+Arnav Kapoor, Department of Electrical Engineering and Computer Science, Indian Institute of Science Education and Research Bhopal, Bhopal 462066, Madhya Pradesh, India. arnavkapoor23@iiserb.ac.in. ORCID 0009-0007-9818-7908.
 
 **Funding**
 No funding was received for this work.

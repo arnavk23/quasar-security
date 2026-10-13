@@ -21,5 +21,7 @@ are public at https://github.com/arnavk23/quasar-security.
 
 Sincerely,
 Arnav Kapoor
+Department of Electrical Engineering and Computer Science
 Indian Institute of Science Education and Research Bhopal
 arnavkapoor23@iiserb.ac.in
+ORCID 0009-0007-9818-7908
