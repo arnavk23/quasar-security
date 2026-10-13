@@ -10,9 +10,10 @@ BUZZ = ["leverage", "novel", "cutting-edge", "state-of-the-art", "seamless", "cr
 
 for path in sys.argv[1:]:
     s = open(path).read()
-    body = s[s.index("\\begin{document}"):s.index("\\bibliographystyle")]
+    end = next(s.index(m) for m in ("\\backmatter", "\\bibliographystyle", "\\bibliography{") if m in s)
+    body = s[s.index("\\begin{document}"):end]
     vis = re.sub(r"\\(label|ref|eqref|cite|url)\{[^}]*\}", "", body)
-    text = re.sub(r"\\begin\{(table|figure)\*?\}.*?\\end\{(table|figure)\*?\}", "", body, flags=re.S)
+    text = re.sub(r"\\begin\{(sidewaystable|table|figure)\*?\}.*?\\end\{(sidewaystable|table|figure)\*?\}", "", body, flags=re.S)
     sents = [x for x in re.split(r"(?<=[.!?])\s+", text) if len(x.split()) > 3]
     long = [x for x in sents if len(x.split()) > 28]
     low = vis.lower()
